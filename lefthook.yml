@@ -10,7 +10,9 @@ pre-commit:
  
     frontend-prettier:
       root: "frontend/"
-      glob: "*.{ts,tsx,js,jsx,json,css,md,html}"
+      glob:
+        - "*.{ts,tsx,js,jsx,json,css,md,html}"
+        - ".prettierrc"
       run: npx prettier --write --ignore-unknown {staged_files}
       stage_fixed: true
 
