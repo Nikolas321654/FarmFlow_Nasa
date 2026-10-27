@@ -1,0 +1,25 @@
+min_version: 1.10.0
+ 
+pre-commit:
+  commands:
+    frontend-eslint:
+      root: "frontend/"
+      glob: "*.{ts,tsx,js,jsx}"
+      run: npx eslint --fix --no-warn-ignored {staged_files}
+      stage_fixed: true
+ 
+    frontend-prettier:
+      root: "frontend/"
+      glob: "*.{ts,tsx,js,jsx,json,css,md,html}"
+      run: npx prettier --write --ignore-unknown {staged_files}
+      stage_fixed: true
+
+ 
+pre-push:
+  parallel: true
+  commands:
+    frontend-check:
+      root: "frontend/"
+      run: npm run lint && npm run format:check
+ 
+ 
