@@ -152,7 +152,7 @@ Using `Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite`, spatial columns 
 | **Evaporative Stress** | ECOSTRESS | `ESI` ($0.0 - 1.0$) | Pre-extracted AppEEARS slices + thermal/moisture derivation |
 
 ### 6.2 Handling NASA API Quirks (`NasaPowerClient`)
-1. **`-999` Missing Value Sanitization:** NASA POWER returns `-999.0` for recent days where satellite passes are still processing (typically a 2–5 day lag for SMAP/IMERG). `NasaPowerClient` strips `-999.0` values and forward-fills from the most recent valid observation so downstream formulas and ONNX tensors never receive `-999.0`.
+1. **`-999` Missing Value Handling:** NASA POWER can return `-999.0` for missing observations. `NasaPowerClient` must signal this condition to `ResilientNasaClient`, which falls back to deterministic fixtures as required by `P0-4`; neither `-999.0` nor silently forward-filled live values should reach downstream formulas or ONNX tensors.
 2. **Coordinate Rounding for Cache Hits:** Coordinates passed to `ResilientNasaClient` are rounded to 2 decimal places (`Math.Round(lat, 2)`, ~1.1 km resolution, well within SMAP/POWER grid cell size) and cached in `HybridCache` for 6 hours.
 3. **Automatic Fallback (`ResilientNasaClient`):** Wraps `NasaPowerClient` with a strict `3.0s` timeout. If NASA endpoints rate-limit or lag during a live presentation, it transparently falls back to `MockNasaClient`.
 
