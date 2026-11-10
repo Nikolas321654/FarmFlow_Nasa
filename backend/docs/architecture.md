@@ -166,11 +166,11 @@ All agronomic formulas live in `Features/AgroAnalytics/AgroFormulas.cs` as pure,
 
 ### 7.1 Early Stress Warning & Smart Irrigation Calculator
 - **Water Deficit Index (WDI):**
-  $$\text{WDI} = 1.0 - (0.6 \cdot \text{sm\_rootzone} + 0.4 \cdot \text{evapotranspiration\_esi})$$
+  $$\text{WDI} = 1.0 - (0.6 \cdot \mathrm{sm\_rootzone} + 0.4 \cdot \mathrm{evapotranspiration\_esi})$$
 - **Hidden Stress Trigger:** If $\text{WDI} > 0.65$ while $\Delta\text{NDVI}_{14\text{d}} \ge -0.05$ (leaves still appear green), trigger `Warning: Hidden Water Stress`.
 - **Smart Irrigation Dose ($\text{mm}$):**
   Calculates exact water deficit in millimeters based on crop-specific target rootzone moisture $\theta_{\text{target}}$ (e.g., `Corn` = $0.55$, `Wheat` = $0.45$, `Soy` = $0.50$, `Sunflower` = $0.40$) and effective root depth $D_{\text{root}}$:
-  $$\text{IrrigationMm} = \max\left(0, (\theta_{\text{target}} - \text{sm\_rootzone}) \cdot D_{\text{root\_mm}} \cdot \text{porosity\_factor}\right)$$
+  $$\text{IrrigationMm} = \max\left(0, (\theta_{\text{target}} - \mathrm{sm\_rootzone}) \cdot D_{\mathrm{root\_mm}} \cdot \mathrm{porosity\_factor}\right)$$
 
 ### 7.2 Field Workability Window & Spraying Advisor
 Evaluates machinery trafficability and agrochemical washout risk over a 48-hour window:
