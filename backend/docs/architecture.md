@@ -144,7 +144,9 @@ Using `Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite`, spatial columns 
 ### 6.1 Data Sources
 | Domain | Mission / Sensor | Parameter | Primary Source |
 | :--- | :--- | :--- | :--- |
-| **Precipitation** | GPM IMERG | `PRECTOTCORR` (mm/day) | NASA POWER Point API (`AG` community) |
+| **Precipitation (daily history)** | GPM IMERG | `PRECTOTCORR` (mm/day) | NASA POWER Point API (`AG` community) |
+| **Precipitation (workability 12h window)** | Scenario fixture stream | `RainLast12hMm` | `MockNasaClient` deterministic fixtures only (`DemoScenario` fields); unavailable for newly drawn live fields |
+| **Precipitation (workability forecast 24–48h)** | Scenario fixture stream | `RainForecast24hMm`, `RainForecast48hMm` | `MockNasaClient` deterministic fixtures only (`DemoScenario` fields); unavailable for newly drawn live fields |
 | **Surface Soil Moisture** | SMAP (0–5 cm) | `GWETTOP` ($0.0 - 1.0$) | NASA POWER Point API |
 | **Rootzone Soil Moisture** | SMAP (0–100 cm) | `GWETROOT` ($0.0 - 1.0$) | NASA POWER Point API |
 | **Solar Radiation** | CERES / MODIS | `ALLSKY_SFC_SW_DWN` | NASA POWER Point API |
