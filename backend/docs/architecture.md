@@ -132,7 +132,7 @@ Using `Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite`, spatial columns 
 ### `AlertFeedback` Entity
 - `Id` (`Guid`, PK)
 - `FieldId` (`Guid`, FK)
-- `AlertType` (`string`) — `"EarlyStress"`, `"BiomassAnomaly"`, `"SprayBlocked"`
+- `AlertType` (`string`) — `"EarlyWaterStress"`, `"SmartIrrigation"`, `"SprayingBlocked"`, `"BiomassAnomaly"`, `"Predictive72hStress"`
 - `IsAccurate` (`bool`)
 - `Comment` (`string?`)
 - `CreatedAt` (`DateTimeOffset`)
