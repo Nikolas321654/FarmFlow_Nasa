@@ -159,6 +159,10 @@ AGENTS.local.md
 CLAUDE.local.md
 .claude/settings.local.json
 
+# my personal stuff - (c) spnchdev
+.agents/mcp_config.json
+.docs.local/
+
 # Tests
 playwright-report/
 test-results/
