@@ -26,8 +26,8 @@ If Tier P0 is complete, the product is fully functional and ready to demo on sta
 | **P0-4** | **Satellite Engine** | Resilient Mock Fallback | Automatic fallback to deterministic JSON fixtures if NASA POWER API times out (>3s), returns `-999` missing values, or rate-limits during the live pitch. |
 | **P0-5** | **Agro Decision Engine** | **F1: Smart Irrigation Calculator** | When `sm_rootzone` drops below crop threshold, generate a task card with exact irrigation depth in $\text{mm}$ and recommended timeframe (e.g., *"22 mm within 36h"*). |
 | **P0-6** | **Agro Decision Engine** | **F2: Workability & Spraying Advisor** | Compute 48h field status (🟢 `Optimal`, 🟡 `Marginal`, 🔴 `Blocked`) and block chemical spraying if `rain_12h > 10mm` or `forecast_24h >= 5mm`. |
-| **P0-7** | **Agro Decision Engine** | **F3: Early Thermal & Stress Detection** | Compute $\text{WaterDeficitIndex} = 1.0 - (0.6 \cdot \text{sm\_rootzone} + 0.4 \cdot \text{esi})$. Trigger hidden stress warning when $\text{WDI} > 0.65$ despite stable $\text{NDVI}$. |
-| **P0-8** | **Agro Decision Engine** | **F4: Vegetation Anomaly Scout** | Compute $\Delta\text{NDVI} = \text{NDVI}_{\text{current}} - \text{NDVI}_{\text{14d\_avg}}$. Trigger pest/disease scouting alert when $\Delta\text{NDVI} < -0.12$ while soil moisture is healthy. |
+| **P0-7** | **Agro Decision Engine** | **F3: Early Thermal & Stress Detection** | Compute $\text{WaterDeficitIndex} = 1.0 - (0.6 \cdot \mathrm {sm\_rootzone} + 0.4 \cdot \text{esi})$. Trigger hidden stress warning when $\text{WDI} > 0.65$ despite stable $\text{NDVI}$. |
+| **P0-8** | **Agro Decision Engine** | **F4: Vegetation Anomaly Scout** | Compute ΔNDVI = NDVI<sub>current</sub> − NDVI<sub>14d_avg</sub>. Trigger pest/disease scouting alert when ΔNDVI < −0.12 while soil moisture is healthy. |
 
 ---
 
