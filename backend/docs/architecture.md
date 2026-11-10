@@ -245,11 +245,12 @@ public static class GetWorkabilityWindow
             field.Centroid.Y, field.Centroid.X, field.DemoScenario, ct);
 
         var latest = series.Latest;
-        var status = (latest.RainLast24hMm, latest.SurfaceMoisture, latest.RainForecast24hMm) switch
+        var status = (latest.RainLast12hMm, latest.RainLast24hMm, latest.SurfaceMoisture, latest.RainForecast24hMm) switch
         {
-            (< 2.0, < 0.35, < 5.0) => "Optimal",
-            (_, < 0.45, < 5.0)     => "Marginal",
-            _                      => "Blocked"
+            (> 10.0, _, _, _)          => "Blocked",
+            (_, < 2.0, < 0.35, < 5.0) => "Optimal",
+            (_, _, < 0.45, < 5.0)     => "Marginal",
+            _                         => "Blocked"
         };
 
         var sprayingSafe = latest.RainLast12hMm <= 10.0 && latest.RainForecast24hMm < 5.0;
