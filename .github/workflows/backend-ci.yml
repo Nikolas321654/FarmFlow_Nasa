@@ -1,0 +1,55 @@
+name: Backend CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - backend
+      - develop
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+  pull_request:
+    branches:
+      - main
+      - master
+      - backend
+      - develop
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: backend-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-build-and-test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.0'
+
+      - name: Restore dependencies
+        run: dotnet restore ./FarmFlow.slnx
+
+      - name: Validate formatting
+        run: dotnet format ./FarmFlow.slnx --verify-no-changes --verbosity minimal
+
+      - name: Build
+        run: dotnet build ./FarmFlow.slnx --no-restore --configuration Release /p:TreatWarningsAsErrors=true
+
+      - name: Test
+        run: dotnet test ./FarmFlow.slnx --no-build --configuration Release --verbosity normal
