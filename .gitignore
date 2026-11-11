@@ -153,6 +153,16 @@ vite.config.ts.timestamp-*
 .DS_Store
 Thumbs.db
 desktop.ini
+Library/
+
+# .NET / C#
+[Bb]in/
+[Oo]bj/
+.nuget/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
 
 # AI agents
 AGENTS.local.md

@@ -21,7 +21,7 @@ To maximize development velocity during the hackathon and eliminate merge confli
 | Layer | Technology | Purpose |
 | :--- | :--- | :--- |
 | **Runtime & Web Framework** | **.NET 10** + **ASP.NET Core Minimal APIs** | High-performance HTTP APIs with minimal ceremony |
-| **Database** | **PostgreSQL 16 + PostGIS 3.4** | Relational storage + native spatial types (`Polygon`, `Point`, GeoJSON) |
+| **Database** | **PostgreSQL + PostGIS (`latest`)** | Relational storage + native spatial types (`Polygon`, `Point`, GeoJSON) |
 | **ORM & Spatial Mapping** | **EF Core 10** + `Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite` | Direct mapping of PostGIS geometries to `NetTopologySuite` types |
 | **GIS / Geometry Engine** | **NetTopologySuite** + `NetTopologySuite.IO.GeoJSON4STJ` | Polygon validation, centroid calculation, and area conversion (hectares) |
 | **Caching & Resilience** | `IHttpClientFactory` + `HybridCache` / `IMemoryCache` | Caching NASA coordinate responses and falling back to mock fixtures |
