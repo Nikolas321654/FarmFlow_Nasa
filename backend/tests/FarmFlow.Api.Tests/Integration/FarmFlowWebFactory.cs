@@ -14,7 +14,7 @@ namespace FarmFlow.Api.Tests.Integration;
 public sealed class FarmFlowWebFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
     private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder()
-        .WithImage("postgis/postgis:17-3.5")
+        .WithImage("imresamu/postgis:17-3.5-alpine")
         .WithDatabase("farmflow_test")
         .WithUsername("postgres")
         .WithPassword("postgres")
