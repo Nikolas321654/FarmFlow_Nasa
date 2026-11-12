@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using FarmFlow.Api.Features.AgroAnalytics;
 using FarmFlow.Api.Features.System;
 using FarmFlow.Api.Infrastructure.Database;
 using FarmFlow.Api.Infrastructure.Nasa;
@@ -68,5 +69,6 @@ if (app.Environment.IsDevelopment())
 
 // Feature Endpoints
 app.MapSystemEndpoints();
+app.MapAgroAnalyticsEndpoints();
 
 await app.RunAsync();
