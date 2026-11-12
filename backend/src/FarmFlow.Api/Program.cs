@@ -26,11 +26,14 @@ builder.Services.AddHttpClient();
 builder.Services.AddOpenApi();
 
 // CORS for local Frontend integration
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? ["http://localhost:5173", "http://localhost:3000"];
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin()
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -58,4 +61,4 @@ if (app.Environment.IsDevelopment())
 // Feature Endpoints
 app.MapSystemEndpoints();
 
-app.Run();
+await app.RunAsync();
