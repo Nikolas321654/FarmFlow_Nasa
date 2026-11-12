@@ -79,7 +79,7 @@ All backend code must strictly adhere to **SOLID** and clean C# practices:
   - Test pure domain & spatial logic (`AgroFormulas`, `GeoCalculator`, `DemoScenarios`) with zero database or network dependencies.
   - Test HTTP clients and resilience decorators (`NasaPowerClient`, `ResilientNasaClient`) using a lightweight fake `HttpMessageHandler` and a real in-memory `HybridCache` (`AddMemoryCache()` + `AddHybridCache()`), verifying `-999.0` rejection, timeout fallback, coordinate rounding, and caching without heavy mocking frameworks or EF InMemory hacks.
 - **Integration Tests (`Integration/`):**
-  - Use **`WebApplicationFactory<Program>`** backed by **`Testcontainers.PostgreSql`** with an explicit PostGIS image (`new PostgreSqlBuilder("postgis/postgis:17-3.5")`, avoiding obsolete parameterless constructors or `:latest`).
+  - Use **`WebApplicationFactory<Program>`** backed by **`Testcontainers.PostgreSql`** with an explicit PostGIS image (`new PostgreSqlBuilder().WithImage("postgis/postgis:17-3.5")`, never `:latest`).
   - Share a single container across integration tests via **`ICollectionFixture<T>`** and `xUnit v3` `IAsyncLifetime` (`ValueTask InitializeAsync()` / `ValueTask DisposeAsync()`). Run `await db.Database.MigrateAsync()` once on startup.
   - Reset state between tests using **`Respawn`** (`Respawner.ResetAsync`), explicitly excluding `__EFMigrationsHistory` and PostGIS system tables (`spatial_ref_sys`, `geometry_columns`, `geography_columns`, `raster_columns`, `raster_overviews`).
   - Stub external NASA HTTP calls inside `WebApplicationFactory` (`HttpMessageHandler` / deterministic fixtures) so integration tests never depend on live external APIs.
