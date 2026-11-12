@@ -64,6 +64,7 @@ All backend code must strictly adhere to **SOLID** and clean C# practices:
 ### Additional C# / .NET 10 Standards
 - **Idiomatic C#:** Use primary constructors, immutable `record` DTOs, target-typed `new`, pattern matching / `switch` expressions, `AsNoTracking()` on read queries, and pass `CancellationToken` through every async call.
 - **DRY & Shallow Nesting:** Centralize shared formulas (`AgroFormulas`) and spatial math (`GeoCalculator`). Keep methods focused with early returns and shallow nesting.
+- **Minimal, High-Signal Comments Only:** Do **not** add `/// <summary>` XML doc bloat on self-explanatory classes/methods or obvious comments that restate the code. Only comment non-obvious *why* (e.g., NASA API quirks or non-trivial invariants).
 - **NASA Data Safety:** Never let `-999.0` sentinel values or uninitialized arrays reach agronomic formulas or ONNX tensors; detect missing data and trigger `ResilientNasaClient` fallback.
 - **SonarAnalyzer Compliance:** Write code that satisfies `SonarAnalyzer.CSharp` cleanly—use `await app.RunAsync()`, avoid insecure wildcard CORS in production, dispose resources cleanly, and never swallow exceptions silently. **Do not** suppress analyzer warnings (`#pragma warning disable` / `SuppressMessage`) unless strictly unavoidable and explained in a comment.
 
