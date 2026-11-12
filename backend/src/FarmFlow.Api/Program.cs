@@ -1,6 +1,8 @@
 using System.Text.Json.Serialization;
 using FarmFlow.Api.Features.System;
+using FarmFlow.Api.Infrastructure.Database;
 using FarmFlow.Api.Infrastructure.Nasa;
+using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.IO.Converters;
 using Scalar.AspNetCore;
 
@@ -16,6 +18,12 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
     options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
 });
+
+// Database (PostgreSQL + PostGIS)
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        npgsql => npgsql.UseNetTopologySuite()));
 
 // Caching & HttpClient
 builder.Services.AddMemoryCache();
