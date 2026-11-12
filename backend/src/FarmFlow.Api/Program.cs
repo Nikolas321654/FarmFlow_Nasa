@@ -29,7 +29,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Caching & HttpClient
 builder.Services.AddMemoryCache();
 builder.Services.AddHybridCache();
-builder.Services.AddHttpClient();
+builder.Services.Configure<NasaSettings>(builder.Configuration.GetSection(NasaSettings.SectionName));
+builder.Services.AddHttpClient<NasaPowerClient>();
 
 // OpenAPI & Documentation
 builder.Services.AddOpenApi();
@@ -50,7 +51,8 @@ builder.Services.AddCors(options =>
 
 // NASA Satellite & Fixture Services
 builder.Services.AddSingleton<INasaFixtureStore, FileNasaFixtureStore>();
-builder.Services.AddSingleton<INasaClient, MockNasaClient>();
+builder.Services.AddSingleton<MockNasaClient>();
+builder.Services.AddScoped<INasaClient, ResilientNasaClient>();
 
 var app = builder.Build();
 
