@@ -1,105 +1,136 @@
 # FarmFlow NASA — Git & Pull Request Workflow
 
-> **Golden Rule:** **NO direct or blind pushes** to `main`, `dev`, `backend-dev`, or `frontend-dev`. Every change—no matter how small—must be pushed to a short-lived feature branch and merged via an approved Pull Request (PR).
+> **Golden Rule:** **NO direct or blind pushes** to `main`, `develop`, `backend`, or `frontend`. Every change—no matter how small—must be pushed to a short-lived branch (`<kind-of-work>/<work-done>`) and merged via an approved Pull Request (PR).
 
 ---
 
-## 1. Long-Lived Branches
+## 1. Branch Naming Convention
 
-To prevent cross-team merge conflicts during rapid hackathon development, we maintain four protected long-lived branches:
+All branches must follow the standard:
+```text
+<kind-of-work>/<work-done>
+```
 
-| Branch | Purpose | Who Merges Into It |
+Categorize branches by the **kind of work** being done (never by domain like `backend/` or `frontend/`, which causes Git ref collisions with long-lived base branches):
+
+| Kind of Work | Usage | Example |
 | :--- | :--- | :--- |
-| **`main`** | **Release / Demo Branch.** Contains stable, production-ready code and shared project documentation. | `dev` (after full integration verification) and `docs/*` PRs directly. |
-| **`dev`** | **Integration Branch.** Combines `backend-dev` and `frontend-dev` work **only** when both sides are ready for end-to-end integration testing. | `backend-dev` and `frontend-dev` via integration PRs. |
-| **`backend-dev`** | **Backend & AI/ML Aggregate Branch.** Primary working base for `.NET 10` API, PostGIS, and Python/ONNX models. Stays isolated from frontend changes during feature work. | `backend/*` and `ml/*` feature PRs. |
-| **`frontend-dev`** | **Frontend Aggregate Branch.** Primary working base for UI, map components, and dashboard views. Stays isolated from backend changes during feature work. | `frontend/*` feature PRs. |
+| **`feature/`** | New functionality, API slices, ML models, UI components | `feature/workability-window-slice`<br>`feature/soil-moisture-lstm-onnx`<br>`feature/map-polygon-drawer` |
+| **`fix/`** | Bug fixes, formula corrections, CI or runtime adjustments | `fix/water-deficit-index-formula`<br>`fix/geojson-srid-projection` |
+| **`chore/`** | Tooling, dependency updates, maintenance, cleanup | `chore/update-git-workflow`<br>`chore/setup-docker-postgis` |
+| **`docs/`** | Documentation updates, architecture guides, API specs | `docs/update-api-spec`<br>`docs/add-readme-instructions` |
+| **`refactor/`** | Code refactoring without changing public behavior | `refactor/extract-nasa-fixture-store` |
+| **`ci/`** | GitHub Actions workflows and automation | `ci/add-backend-build-workflow` |
 
 ---
 
-## 2. Branch Flow Diagram
+## 2. Commit Message Convention
+
+All commit messages must strictly follow the team lead format:
+
+```text
+[<type>-<scope>] - <Description>
+```
+
+### Format Breakdown:
+- **`<type>`**: `feature` | `fix` | `chore` | `docs` | `devops` | `refactor` | `test`
+- **`<scope>`**: `backend` | `frontend` | `ml` | `docs` | `main` | `shared`
+- **`<Description>`**: Clear description of what was added, changed, or fixed.
+
+### Approved Examples:
+```text
+[feature-backend] - Implemented .NET 10 API and PostGIS
+[feature-backend] - Made temporary mock NASA pipeline
+[chore-docs] - Updated Git workflow guide with new branch and commit conventions
+[feature-ml] - Trained 7-day soil moisture LSTM and exported to ONNX
+[fix-backend] - Corrected surface moisture threshold for optimal workability
+[feature-frontend] - Added interactive field polygon drawer on map
+[devops-main] - Updated .NET version in CI
+```
+
+---
+
+## 3. Long-Lived Branches
+
+| Branch | Purpose | PR Target For |
+| :--- | :--- | :--- |
+| **`main`** | **Release / Demo Branch.** Stable, production-ready code, root docs, and CI workflows. | Shared `docs/*` / `chore/*` PRs, and `develop` when releasing. |
+| **`develop`** | **Integration Branch.** Aggregates backend and frontend only when both are ready for cross-team integration testing. | Integration PRs from `backend` and `frontend`. |
+| **`backend`** | **Backend & AI/ML Branch.** Primary base for .NET 10 API, PostGIS, and Python/ONNX ML models. Stays isolated from frontend during active feature work. | Backend and ML `feature/*`, `fix/*`, `chore/*`, `refactor/*` PRs. |
+| **`frontend`** | **Frontend Branch.** Primary base for React/UI, map components, and dashboard charts. Stays isolated from backend during active feature work. | Frontend `feature/*`, `fix/*`, `chore/*`, `refactor/*` PRs. |
+
+---
+
+## 4. Branch Flow Diagram
 
 ```mermaid
 flowchart BT
-    subgraph Feature_Branches ["1. Short-Lived Working Branches"]
-        F_FE["frontend/add-map-drawer"]
-        F_BE["backend/add-workability-slice"]
-        F_ML["ml/train-soil-forecast-onnx"]
-        F_DOC["docs/add-api-spec"]
+    subgraph Working_Branches ["1. Working Branches (<kind-of-work>/<work-done>)"]
+        F1["feature/workability-slice"]
+        F2["feature/soil-forecast-onnx"]
+        F3["feature/polygon-drawer"]
+        F4["docs/update-git-workflow"]
     end
 
-    subgraph Team_Branches ["2. Isolated Domain Branches"]
-        FE["frontend-dev"]
-        BE["backend-dev"]
+    subgraph Domain_Branches ["2. Isolated Domain Bases"]
+        BE["backend"]
+        FE["frontend"]
     end
 
     subgraph Integration_Release ["3. Integration & Release"]
-        DEV["dev (Integration)"]
-        MAIN["main (Release / Stage Demo)"]
+        DEV["develop (Integration)"]
+        MAIN["main (Release / Live Demo)"]
     end
 
-    F_FE -->|PR & Review| FE
-    F_BE -->|PR & Review| BE
-    F_ML -->|PR & Review| BE
-    F_DOC -->|PR & Review| MAIN
+    F1 -->|PR & Review| BE
+    F2 -->|PR & Review| BE
+    F3 -->|PR & Review| FE
+    F4 -->|PR & Review| MAIN
 
-    FE -->|PR when ready to integrate| DEV
-    BE -->|PR when ready to integrate| DEV
+    BE -->|PR when integration needed| DEV
+    FE -->|PR when integration needed| DEV
     DEV -->|PR when verified stable| MAIN
 ```
 
 ---
 
-## 3. Feature Branch Naming & PR Targets
-
-All working branches must follow the pattern:
-```text
-<domain>/<short-kebab-case-description>
-```
-
-| Domain Prefix | Scope of Work | Branch From | Open PR Against (Base Branch) | Example Branch Name |
-| :--- | :--- | :--- | :--- | :--- |
-| **`docs/`** | Root/shared documentation (`docs/*`, architecture specs) | `main` | **`main`** | `docs/add-api-spec` |
-| **`backend/`** | `.NET 10` API, PostGIS, vertical slices, Docker setup | `backend-dev` | **`backend-dev`** | `backend/add-workability-endpoint` |
-| **`ml/`** | Python training scripts, datasets, `.onnx` model exports | `backend-dev` | **`backend-dev`** | `ml/export-yield-onnx` |
-| **`frontend/`** | UI components, Map/GeoJSON views, state management | `frontend-dev` | **`frontend-dev`** | `frontend/field-polygon-drawer` |
-
----
-
-## 4. Step-by-Step Developer Workflow
+## 5. Step-by-Step Developer Workflow
 
 ### A. Starting New Work
-1. Checkout and pull the latest changes from your target base branch (`backend-dev`, `frontend-dev`, or `main` for docs):
+1. Checkout and pull the latest changes from your base branch (`backend`, `frontend`, or `main`):
    ```bash
-   git checkout backend-dev
-   git pull origin backend-dev
+   git checkout backend
+   git pull origin backend
    ```
-2. Create and switch to your scoped feature branch:
+2. Create and switch to your branch:
    ```bash
-   git checkout -b backend/implement-nasa-client
+   git switch -c feature/workability-window-slice
    ```
 
 ### B. Committing & Pushing
-1. Stage and commit only the files relevant to your slice (note: `.docs.local/` is local-only and ignored by Git):
+1. Stage your changes:
    ```bash
    git add <files>
-   git commit -m "feat(backend): implement ResilientNasaClient with mock fallback"
    ```
-2. Push your feature branch to remote:
+2. Commit using the `[<type>-<scope>] - <Description>` convention:
    ```bash
-   git push -u origin backend/implement-nasa-client
+   git commit -m "[feature-backend] - Implemented workability window and spraying safety slice"
+   ```
+3. Push to remote:
+   ```bash
+   git push -u origin feature/workability-window-slice
    ```
 
 ### C. Opening & Merging a Pull Request
-1. Open a Pull Request on GitHub comparing your branch (`<domain>/<change>`) into its corresponding base branch:
-   - `backend/*` or `ml/*` $\rightarrow$ **`backend-dev`**
-   - `frontend/*` $\rightarrow$ **`frontend-dev`**
-   - `docs/*` $\rightarrow$ **`main`**
-2. Request review from your teammate. Once approved, merge the PR and delete the short-lived branch.
+1. Open a PR on GitHub into the corresponding base branch:
+   - Backend / ML work $\rightarrow$ base: **`backend`**
+   - Frontend work $\rightarrow$ base: **`frontend`**
+   - Documentation / CI $\rightarrow$ base: **`main`**
+2. Request a review from your teammate. Once approved and checks pass, merge the PR and delete the feature branch.
 
-### D. Cross-Team Integration (`backend-dev` + `frontend-dev` $\rightarrow$ `dev` $\rightarrow$ `main`)
-- While features are being built in parallel, `backend-dev` and `frontend-dev` **remain separate** so neither team is blocked or hit with merge conflicts.
-- Once endpoints and UI components are ready to connect end-to-end:
-  1. Open PRs from `backend-dev` $\rightarrow$ `dev` and `frontend-dev` $\rightarrow$ `dev`.
-  2. Test the full integrated stack on `dev`.
-  3. Once verified stable, open a release PR from `dev` $\rightarrow$ `main`.
+### D. End-to-End Integration
+- When backend endpoints and frontend components are ready to communicate live:
+  1. Open a PR from `backend` $\rightarrow$ `develop`.
+  2. Open a PR from `frontend` $\rightarrow$ `develop`.
+  3. Verify the integrated system on `develop`.
+  4. Open a release PR from `develop` $\rightarrow$ `main`.
