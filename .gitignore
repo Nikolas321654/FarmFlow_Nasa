@@ -167,6 +167,7 @@ Library/
 # AI agents
 AGENTS.local.md
 CLAUDE.local.md
+GEMINI.local.md
 .claude/settings.local.json
 
 # my personal stuff - (c) spnchdev
