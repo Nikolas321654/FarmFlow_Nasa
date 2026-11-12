@@ -157,8 +157,10 @@ Library/
 
 # .NET / C#
 [Bb]in/
+[Bb]in\\*/
 [Oo]bj/
 .nuget/
+.local/
 *.user
 *.suo
 *.userosscache
@@ -177,3 +179,4 @@ GEMINI.local.md
 # Tests
 playwright-report/
 test-results/
+TestResults/
