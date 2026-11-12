@@ -25,6 +25,7 @@ Read and align with these documents before making architectural or contract chan
   - **Offline Training (`backend/ml/`):** Python, `scikit-learn` + `skl2onnx` (`yield_model.onnx`), `PyTorch` + `onnx` (`soil_forecast.onnx`).
   - **Production Inference (`.NET`):** In-process via `Microsoft.ML.OnnxRuntime` (`InferenceSession` registered as a **Singleton**). Never run a Python microservice in production.
 - **API Docs & Error Handling:** `Microsoft.AspNetCore.OpenApi` + `Scalar.AspNetCore` (`/scalar/v1`), RFC 7807/9457 `ProblemDetails`.
+- **Testing:** `xUnit v3` (`xunit.v3`), `Shouldly`, `Microsoft.AspNetCore.Mvc.Testing`, `Testcontainers.PostgreSql` (`postgis/postgis`), `Respawn`.
 - **Static Analysis:** `SonarAnalyzer.CSharp` (warnings treated as errors in CI and required local verification).
 
 ---
@@ -33,12 +34,12 @@ Read and align with these documents before making architectural or contract chan
 
 1. **Vertical Slice Architecture:**
    - Organize endpoints as self-contained feature slices under `Features/<Module>/<Action>.cs` (static class with nested `Request`/`Response` records, `MapEndpoint`, and `Handle`).
-   - Group slice route registrations via extension methods (e.g., `app.MapSystemEndpoints()`). Keep `Program.cs` strictly as the composition root.
+   - Group slice route registrations via extension methods (e.g., `app.MapSystemEndpoints()`). Keep `Program.cs` strictly as the composition root (with `public partial class Program;` for integration testing).
    - Do **not** introduce N-tier/Clean Architecture layers (`Controllers`, `BLL`, `DAL`, `Repositories`, `MediatR`) or `IFooService` wrappers for single-implementation logic—inject `AppDbContext` directly into handlers.
 2. **Respect Hard Out-of-Scope Guardrails (@docs/scope.md):**
    - No Auth/JWT/RBAC, no GraphQL/gRPC, no message brokers, no live HDF5/GeoTIFF parsing in .NET, no synchronous AppEEARS polling, and no separate Python inference service.
-3. **Preserve Team Boundaries (@backend/docs/architecture.md):**
-   - Avoid editing slices owned by another backend teammate unless coordinated, to keep parallel PRs conflict-free.
+3. **Preserve Slice Isolation (@backend/docs/architecture.md):**
+   - Keep feature slices decoupled and free of cross-slice hacks so parallel work and isolated testing remain clean.
 
 ---
 
@@ -70,23 +71,40 @@ All backend code must strictly adhere to **SOLID** and clean C# practices:
 
 ---
 
-## 5. Mandatory Build, Format & Verification Gate
+## 5. Testing Standards (`backend/tests/FarmFlow.Api.Tests`)
+
+- **Framework & Assertions:** Use **`xUnit v3`** (`xunit.v3` + `xunit.runner.visualstudio` + `Microsoft.NET.Test.Sdk`) and **`Shouldly`**. Set `<DebugType>embedded</DebugType>` in test projects so Shouldly emits descriptive diagnostics in Release/CI builds.
+- **SonarAnalyzer Compatibility:** Keep Shouldly assertions (`.ShouldBe(...)`, `Should.ThrowAsync(...)`) directly inside `[Fact]` / `[Theory]` bodies so `S2699` detects them without false positives. If test-only style rules (e.g., theory parameter count `S107`) need relaxation, configure `[**/tests/**/*.cs]` in `.editorconfig` rather than scattering `#pragma warning disable`.
+- **Unit Tests (`Unit/`):**
+  - Test pure domain & spatial logic (`AgroFormulas`, `GeoCalculator`, `DemoScenarios`) with zero database or network dependencies.
+  - Test HTTP clients and resilience decorators (`NasaPowerClient`, `ResilientNasaClient`) using a lightweight fake `HttpMessageHandler` and a real in-memory `HybridCache` (`AddMemoryCache()` + `AddHybridCache()`), verifying `-999.0` rejection, timeout fallback, coordinate rounding, and caching without heavy mocking frameworks or EF InMemory hacks.
+- **Integration Tests (`Integration/`):**
+  - Use **`WebApplicationFactory<Program>`** backed by **`Testcontainers.PostgreSql`** with an explicit PostGIS image (`new PostgreSqlBuilder("postgis/postgis:17-3.5")`, avoiding obsolete parameterless constructors or `:latest`).
+  - Share a single container across integration tests via **`ICollectionFixture<T>`** and `xUnit v3` `IAsyncLifetime` (`ValueTask InitializeAsync()` / `ValueTask DisposeAsync()`). Run `await db.Database.MigrateAsync()` once on startup.
+  - Reset state between tests using **`Respawn`** (`Respawner.ResetAsync`), explicitly excluding `__EFMigrationsHistory` and PostGIS system tables (`spatial_ref_sys`, `geometry_columns`, `geography_columns`, `raster_columns`, `raster_overviews`).
+  - Stub external NASA HTTP calls inside `WebApplicationFactory` (`HttpMessageHandler` / deterministic fixtures) so integration tests never depend on live external APIs.
+  - Mark container-backed test classes with `[Trait("Category", "Integration")]` so fast inner-loop runs can skip Docker (`--filter "Category!=Integration"`) while full verification runs everything.
+
+---
+
+## 6. Mandatory Build, Format & Verification Gate
 
 Before finishing **any** code edit (and before every commit), run from `./backend`:
 
 ```bash
 dotnet format ./FarmFlow.slnx --no-restore --verify-no-changes --verbosity minimal
-dotnet build ./FarmFlow.slnx --no-restore /warnaserror
+dotnet build ./FarmFlow.slnx --no-restore --configuration Release /warnaserror
+dotnet test ./FarmFlow.slnx --no-build --configuration Release --verbosity normal
 ```
 
-*(CI also runs `--configuration Release /p:TreatWarningsAsErrors=true` and `dotnet test ./FarmFlow.slnx --no-build --configuration Release`; verify `dotnet build ./FarmFlow.slnx /warnaserror` locally as a hard minimum.)*
+*(When running fast local unit iterations without Docker available, `dotnet test --filter "Category!=Integration"` may be used, but full CI requires Docker/Testcontainers and all tests passing.)*
 
-- **Immediate Fix Policy:** If `dotnet build /warnaserror` or `dotnet format` fails for **any** reason—compiler error, CS warning, or `SonarAnalyzer.CSharp` rule—**fix it immediately** before concluding your work or committing.
+- **Immediate Fix Policy:** If `dotnet build /warnaserror`, `dotnet format`, or `dotnet test` fails for **any** reason—compiler error, CS warning, `SonarAnalyzer.CSharp` rule, or failing test—**fix it immediately** before concluding your work or committing.
 - **Workspace Hygiene:** Never leave generated tool folders (`.nuget/`, `.local/`, `Library/`) or `bin/`/`obj/` artifacts untracked or committed.
 
 ---
 
-## 6. Git Hygiene & Granular Commits
+## 7. Git Hygiene & Granular Commits
 
 Follow @docs/git-workflow.md strictly:
 
