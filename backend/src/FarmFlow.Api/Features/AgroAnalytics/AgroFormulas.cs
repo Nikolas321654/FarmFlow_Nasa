@@ -72,7 +72,7 @@ public static class AgroFormulas
 
         var status = (series.RainLast12hMm, series.RainLast24hMm, latest.SurfaceMoisture, series.RainForecast24hMm) switch
         {
-            (> 10.0, _, _, _) => "Blocked",
+            ( > 10.0, _, _, _) => "Blocked",
             (_, < 2.0, < 0.35, < 5.0) => "Optimal",
             (_, _, < 0.45, < 5.0) => "Marginal",
             _ => "Blocked"
