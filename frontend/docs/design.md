@@ -1,12 +1,12 @@
 ## Stack
-React, TypeScript, Vite, TailwindCSS, React Router, TanStack Query, React Leaflet, Leaflet, Leaflet-Geoman, Recharts, FontAwesome; Helvetica for UI text and Bauhaus for headings and brand accents.
+React, TypeScript, Vite, TailwindCSS, React Router, TanStack Query, React Leaflet, Leaflet, Leaflet-Geoman, Recharts, FontAwesome; Helvetica for UI text and Righteous for large headings and display accents.
 
 ## Typography
 - Primary font: Helvetica
-- Display font: Bauhaus (exact typeface TBD)
+- Display font: Righteous 400, self-hosted with `@fontsource/righteous`
 - Body text, navigation, buttons, forms, charts: Helvetica
-- Page headings and brand accents: Bauhaus
-- Avoid Bauhaus in small text and dense data displays.
+- Large page headings and display accents: Righteous 400 (`font-display font-normal` or `display-accent`)
+- Avoid Righteous in small text and dense data displays.
 - Use consistent typography tokens across all screens.
 
 ## Rules

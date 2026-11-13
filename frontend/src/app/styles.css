@@ -37,8 +37,7 @@
   --text-display: 2rem;
   --text-display--line-height: 2.5rem;
   --font-sans: Helvetica, Arial, sans-serif;
-  /* The exact Bauhaus typeface is pending approval. */
-  --font-display: Helvetica, Arial, sans-serif;
+  --font-display: Righteous, Helvetica, Arial, sans-serif;
 }
 
 html {
@@ -49,4 +48,16 @@ html {
 
 body {
   margin: 0;
+}
+
+@layer base {
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 400;
+  }
+}
+
+@utility display-accent {
+  font-family: var(--font-display);
+  font-weight: 400;
 }
