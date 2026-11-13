@@ -1,5 +1,5 @@
-import { AppHeader } from '@/widgets/app-header';
+import { AppRouter } from './router';
 
 export function App() {
-  return <AppHeader />;
+  return <AppRouter />;
 }
