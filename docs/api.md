@@ -25,10 +25,95 @@
 
 ---
 
+## Authentication, Session Cookies, CSRF & User Profile (`Features/Auth`, `Features/Users`)
+
+> **Frontend Integration Model:** Prefer a same-origin proxy (e.g., `/api/*` forwarded to the backend) so `HttpOnly` session cookies and CSRF tokens work reliably across browsers without third-party cookie restrictions. If cross-origin requests are used during development or split hosting, send `credentials: "include"`, add the exact frontend origin to `Cors:AllowedOrigins` (wildcard `*` is disallowed with credentials), and include the anti-forgery header on every state-changing request (`POST`, `PATCH`, `DELETE`).
+>
+> **Auth Error Semantics:**
+> - `401 Unauthorized` — Guest / expired session on an endpoint requiring sign-in (`POST /api/fields`, `DELETE /api/fields/{id}`, `PATCH /api/users/me`, `POST /api/alerts/{id}/feedback`).
+> - `403 Forbidden` — Authenticated user attempting a prohibited action (e.g., deleting a shared demo field) or missing/invalid CSRF token.
+> - `404 Not Found` — Missing resource **or** private field owned by another user / ownerless non-demo row (prevents ID enumeration).
+
+### `GET /api/auth/google`
+Starts the server-side Google OAuth 2.0 login flow and redirects to Google.
+- **Query Params:** `returnUrl` *(optional)* — validated against relative local paths or configured `Auth:AllowedRedirectOrigins`; unsafe/external URLs fall back to the default frontend URL (open-redirect protection).
+- **Response:** `302 Found` redirect to Google OAuth consent screen.
+
+### `GET /api/auth/google/callback`
+Server-side OAuth callback configured in Google Cloud Console (`Authorized redirect URIs`). Exchanges the authorization code server-side, looks up or creates the `User` by Google **`sub`** (`GoogleSubjectId`), sets the persistent `HttpOnly` session cookie, and redirects back to the validated `returnUrl`.
+- **Profile Sync Rules:** First login initializes `GoogleDisplayName`, `Email`, and `AvatarUrl` (`CustomDisplayName = null`). Repeat logins refresh `Email`, `GoogleDisplayName`, and `AvatarUrl` without ever overwriting `CustomDisplayName`.
+
+### `GET /api/auth/csrf`
+Issues a fresh CSRF token pair (sets the anti-forgery cookie and returns the request token for SPA clients).
+
+#### Response `200 OK`
+```json
+{
+  "headerName": "X-CSRF-TOKEN",
+  "token": "CfDJ8..."
+}
+```
+
+### `GET /api/auth/me`
+Returns the current session and effective profile without failing for guests.
+
+#### Response `200 OK` (Guest)
+```json
+{
+  "authenticated": false,
+  "user": null
+}
+```
+
+#### Response `200 OK` (Signed-In User)
+```json
+{
+  "authenticated": true,
+  "user": {
+    "id": "9f8c1d7e-3b45-4c2e-9a12-7e6f5d4c3b2a",
+    "displayName": "Olena Kovalenko",
+    "email": "olena.kovalenko@gmail.com",
+    "avatarUrl": "https://lh3.googleusercontent.com/..."
+  }
+}
+```
+*(Note: `displayName` resolves to `CustomDisplayName ?? GoogleDisplayName`.)*
+
+### `POST /api/auth/logout`
+Clears the persistent session cookie (`HttpOnly`). Requires a valid `X-CSRF-TOKEN` header.
+- **Response:** `204 No Content` (idempotent when already signed out).
+
+### `PATCH /api/users/me`
+Updates the authenticated user's `CustomDisplayName`. Requires authentication (`401 Unauthorized` if guest) and valid `X-CSRF-TOKEN`. Email, `AvatarUrl`, and `GoogleSubjectId` are read-only and cannot be mutated by clients.
+
+#### Request Body
+```json
+{
+  "displayName": "Olena (Cherkasy Farm)"
+}
+```
+- **Validation:** Trims leading/trailing whitespace; must be non-empty and within `1..100` characters (`400 Bad Request` `ProblemDetails` on invalid input).
+
+#### Response `200 OK`
+```json
+{
+  "id": "9f8c1d7e-3b45-4c2e-9a12-7e6f5d4c3b2a",
+  "displayName": "Olena (Cherkasy Farm)",
+  "email": "olena.kovalenko@gmail.com",
+  "avatarUrl": "https://lh3.googleusercontent.com/..."
+}
+```
+
+---
+
 ## 2. Field Management Endpoints (`Features/Fields`)
 
 ### 2.1 `GET /api/fields`
-Returns the catalog of all fields with summary status badges so the map sidebar and polygon borders can render immediately (`P0-1`, `P0-2`).
+Returns the visible catalog of fields with summary status badges so the map sidebar and polygon borders can render immediately (`P0-1`, `P0-2`, `P0-10`).
+- **Visibility Filtering (enforced in SQL before NASA/summary lookups):**
+  - **Guest:** Returns only public demo fields (`IsDemo = true`).
+  - **Signed-In User:** Returns public demo fields plus the user's own private fields (`IsDemo = true || OwnerId == currentUserId`).
+  - Ownerless non-demo records (`IsDemo = false && OwnerId == null`) and other users' private fields are never returned.
 
 #### Response `200 OK`
 ```json
@@ -63,7 +148,9 @@ Returns the catalog of all fields with summary status badges so the map sidebar 
 ---
 
 ### 2.2 `POST /api/fields`
-Creates a new field from an interactive map polygon or uploaded GeoJSON (`P0-1`). The backend automatically computes `areaHectares` and the geographic centroid (`centroidLat`, `centroidLon`).
+Creates a new private field from an interactive map polygon or uploaded GeoJSON (`P0-1`, `P0-10`). The backend automatically computes `areaHectares` and the geographic centroid (`centroidLat`, `centroidLon`).
+- **Auth & CSRF Required:** Requires signed-in Google session cookie (`401 Unauthorized` if guest) and valid `X-CSRF-TOKEN` header.
+- **Server-Enforced Ownership:** The backend unconditionally assigns `OwnerId = currentUserId` and `IsDemo = false`, ignoring any client-supplied ownership or demo flags.
 
 #### Request Body
 ```json
@@ -92,21 +179,27 @@ Returns the created field object (same schema as `GET /api/fields/{id}`).
 ---
 
 ### 2.3 `GET /api/fields/{id}`
-Returns metadata and geometry for a single field.
+Returns metadata and geometry for a single accessible field (`IsDemo == true` or `OwnerId == currentUserId`).
 
 #### Response `200 OK`
-Same object structure as an item in `GET /api/fields`. Returns `404 Not Found` if `id` does not exist.
+Same object structure as an item in `GET /api/fields`. Returns `404 Not Found` if `id` does not exist, is an ownerless non-demo field, or belongs to another user.
 
 ---
 
 ### 2.4 `DELETE /api/fields/{id}`
-Deletes a field from the catalog.
+Deletes a private user-owned field from the catalog. Requires signed-in Google session cookie and valid `X-CSRF-TOKEN`.
 
-#### Response `204 No Content`
+#### Responses
+- `204 No Content` — Private field deleted successfully.
+- `401 Unauthorized` — Unauthenticated guest request.
+- `403 Forbidden` — Attempted deletion of a shared public demo field (`IsDemo == true`).
+- `404 Not Found` — Field does not exist or belongs to another user.
 
 ---
 
 ## 3. Agro Analytics & Satellite Monitoring (`Features/AgroAnalytics`)
+
+> **Field Access Control (Applies to `/dashboard`, `/workability`, `/stress`, `/biomass`, and future `/predictions/*`):** Every field analytics endpoint validates field visibility (`IsDemo == true || OwnerId == currentUserId`) in PostgreSQL **before** calling `INasaClient` or computing formulas. Requests targeting inaccessible private fields (as a guest or another user) return `404 Not Found`.
 
 ### 3.1 `GET /api/fields/{id}/dashboard`
 Unified endpoint returning the 14–30 day NASA satellite time-series (`P0-3`), all 4 deterministic agronomic evaluations (`P0-5` to `P0-8`), and sustainability impact KPIs (`P2-2`) in a single request.
