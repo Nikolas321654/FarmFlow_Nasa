@@ -5,6 +5,16 @@ export {
   getWorkabilityWindow,
 } from './api/analyticsApi';
 export { createField, deleteField, getFieldById, getFields } from './api/fieldApi';
+export {
+  isValidFieldId,
+  useField,
+  useFieldBiomass,
+  useFieldDashboard,
+  useFields,
+  useFieldStress,
+  useFieldWorkability,
+} from './api/fieldQueries';
+export { fieldQueryKeys } from './api/queryKeys';
 export type {
   AlertSeverity,
   BiomassTrend,
