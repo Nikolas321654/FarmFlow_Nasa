@@ -12,4 +12,7 @@ public class Field
     public Point Centroid { get; set; } = null!;
     public double AreaHectares { get; set; }
     public string? DemoScenario { get; set; }
+    public Guid? OwnerId { get; set; }
+    public User? Owner { get; set; }
+    public bool IsDemo { get; set; }
 }

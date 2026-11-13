@@ -54,13 +54,23 @@ public static class DbSeeder
 
     public static async Task SeedAsync(AppDbContext db, CancellationToken ct = default)
     {
-        if (await db.Fields.AnyAsync(ct))
+        var demoIds = DemoFields.Select(d => d.Id).ToArray();
+        var existingIds = await db.Fields
+            .Where(f => demoIds.Contains(f.Id))
+            .Select(f => f.Id)
+            .ToHashSetAsync(ct);
+
+        var missingFields = DemoFields
+            .Where(spec => !existingIds.Contains(spec.Id))
+            .Select(BuildField)
+            .ToList();
+
+        if (missingFields.Count == 0)
         {
             return;
         }
 
-        var fields = DemoFields.Select(BuildField).ToList();
-        await db.Fields.AddRangeAsync(fields, ct);
+        await db.Fields.AddRangeAsync(missingFields, ct);
         await db.SaveChangesAsync(ct);
     }
 
@@ -79,7 +89,9 @@ public static class DbSeeder
             Boundary = boundary,
             Centroid = GeoCalculator.CalculateCentroid(boundary),
             AreaHectares = GeoCalculator.CalculateAreaHectares(boundary),
-            DemoScenario = spec.DemoScenario
+            DemoScenario = spec.DemoScenario,
+            OwnerId = null,
+            IsDemo = true
         };
     }
 }

@@ -81,17 +81,72 @@ namespace FarmFlow.Api.Infrastructure.Database.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
 
+                    b.Property<bool>("IsDemo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
+
+                    b.Property<Guid?>("OwnerId")
+                        .HasColumnType("uuid");
 
                     b.Property<DateOnly>("PlantedAt")
                         .HasColumnType("date");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("IsDemo");
+
+                    b.HasIndex("OwnerId");
+
                     b.ToTable("Fields");
+                });
+
+            modelBuilder.Entity("FarmFlow.Api.Infrastructure.Database.Entities.User", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AvatarUrl")
+                        .HasMaxLength(2048)
+                        .HasColumnType("character varying(2048)");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("CustomDisplayName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
+                    b.Property<string>("GoogleDisplayName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("GoogleSubjectId")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<DateTimeOffset>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GoogleSubjectId")
+                        .IsUnique();
+
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("FarmFlow.Api.Infrastructure.Database.Entities.AlertFeedback", b =>
@@ -103,6 +158,16 @@ namespace FarmFlow.Api.Infrastructure.Database.Migrations
                         .IsRequired();
 
                     b.Navigation("Field");
+                });
+
+            modelBuilder.Entity("FarmFlow.Api.Infrastructure.Database.Entities.Field", b =>
+                {
+                    b.HasOne("FarmFlow.Api.Infrastructure.Database.Entities.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Owner");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,8 +1,9 @@
+using System.Security.Claims;
+using FarmFlow.Api.Infrastructure.Auth;
 using FarmFlow.Api.Infrastructure.Database;
 using FarmFlow.Api.Infrastructure.Database.Entities;
 using FarmFlow.Api.Infrastructure.Nasa;
 using FarmFlow.Api.Infrastructure.Nasa.NasaModels;
-using Microsoft.EntityFrameworkCore;
 
 namespace FarmFlow.Api.Features.AgroAnalytics;
 
@@ -64,12 +65,13 @@ public static class GetFieldDashboard
 
     public static async Task<IResult> Handle(
         Guid id,
+        ClaimsPrincipal principal,
         AppDbContext db,
         INasaClient nasaClient,
         int days = 14,
         CancellationToken ct = default)
     {
-        var field = await db.Fields.AsNoTracking().FirstOrDefaultAsync(f => f.Id == id, ct);
+        var field = await db.GetAccessibleFieldAsync(id, principal, ct);
         if (field is null)
         {
             return Results.NotFound();

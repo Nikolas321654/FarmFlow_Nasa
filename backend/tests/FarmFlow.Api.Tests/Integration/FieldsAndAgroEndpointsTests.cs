@@ -25,6 +25,9 @@ public sealed class FieldsAndAgroEndpointsTests(FarmFlowWebFactory factory) : IA
     [Fact]
     public async Task CreateGetAndListFields_PersistsPostGisGeometryAndComputesAreaAndCentroid()
     {
+        var user = await factory.SeedUserAsync("sub-fields-1", "farmer1@example.com", "Farmer One");
+        using var authedClient = await factory.CreateAuthenticatedClientAsync(user.Id);
+
         var payload = new
         {
             name = "Field #5 — South Valley",
@@ -47,21 +50,22 @@ public sealed class FieldsAndAgroEndpointsTests(FarmFlowWebFactory factory) : IA
             }
         };
 
-        var createResponse = await _client.PostAsJsonAsync("/api/fields", payload, TestContext.Current.CancellationToken);
+        var createResponse = await authedClient.PostAsJsonAsync("/api/fields", payload, TestContext.Current.CancellationToken);
         createResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
 
         var created = await createResponse.Content.ReadFromJsonAsync<FieldSummaryResponse>(JsonOptions, TestContext.Current.CancellationToken);
         created.ShouldNotBeNull();
         created.Name.ShouldBe("Field #5 — South Valley");
+        created.IsDemo.ShouldBeFalse();
         created.AreaHectares.ShouldBeGreaterThan(100.0);
         created.CentroidLat.ShouldBeInRange(49.210, 49.222);
         created.CentroidLon.ShouldBeInRange(30.512, 30.528);
 
-        var getResponse = await _client.GetFromJsonAsync<FieldSummaryResponse>($"/api/fields/{created.Id}", JsonOptions, TestContext.Current.CancellationToken);
+        var getResponse = await authedClient.GetFromJsonAsync<FieldSummaryResponse>($"/api/fields/{created.Id}", JsonOptions, TestContext.Current.CancellationToken);
         getResponse.ShouldNotBeNull();
         getResponse.Id.ShouldBe(created.Id);
 
-        var listResponse = await _client.GetFromJsonAsync<List<FieldSummaryResponse>>("/api/fields", JsonOptions, TestContext.Current.CancellationToken);
+        var listResponse = await authedClient.GetFromJsonAsync<List<FieldSummaryResponse>>("/api/fields", JsonOptions, TestContext.Current.CancellationToken);
         listResponse.ShouldNotBeNull();
         listResponse.Count.ShouldBe(1);
     }
@@ -69,6 +73,9 @@ public sealed class FieldsAndAgroEndpointsTests(FarmFlowWebFactory factory) : IA
     [Fact]
     public async Task CreateField_ReturnsValidationProblem_WhenBoundarySelfIntersects()
     {
+        var user = await factory.SeedUserAsync("sub-fields-2", "farmer2@example.com", "Farmer Two");
+        using var authedClient = await factory.CreateAuthenticatedClientAsync(user.Id);
+
         var invalidPayload = new
         {
             name = "Broken Polygon Field",
@@ -91,21 +98,48 @@ public sealed class FieldsAndAgroEndpointsTests(FarmFlowWebFactory factory) : IA
             }
         };
 
-        var response = await _client.PostAsJsonAsync("/api/fields", invalidPayload, TestContext.Current.CancellationToken);
+        var response = await authedClient.PostAsJsonAsync("/api/fields", invalidPayload, TestContext.Current.CancellationToken);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]
-    public async Task DeleteField_RemovesFieldAndReturnsNotFoundAfterwards()
+    public async Task DeleteField_RemovesOwnPrivateFieldAndReturnsNotFoundAfterwards()
     {
-        await factory.ExecuteWithDbAsync(db => DbSeeder.SeedAsync(db));
-        var fieldId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+        var user = await factory.SeedUserAsync("sub-fields-3", "farmer3@example.com", "Farmer Three");
+        using var authedClient = await factory.CreateAuthenticatedClientAsync(user.Id);
 
-        var deleteResponse = await _client.DeleteAsync($"/api/fields/{fieldId}", TestContext.Current.CancellationToken);
+        var payload = new
+        {
+            name = "Temporary Field",
+            cropType = "Soy",
+            plantedAt = "2026-05-15",
+            boundary = new
+            {
+                type = "Polygon",
+                coordinates = new[]
+                {
+                    new[]
+                    {
+                        new[] { 30.512, 49.210 },
+                        new[] { 30.528, 49.210 },
+                        new[] { 30.528, 49.222 },
+                        new[] { 30.512, 49.222 },
+                        new[] { 30.512, 49.210 }
+                    }
+                }
+            }
+        };
+
+        var createResponse = await authedClient.PostAsJsonAsync("/api/fields", payload, TestContext.Current.CancellationToken);
+        createResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
+        var created = await createResponse.Content.ReadFromJsonAsync<FieldSummaryResponse>(JsonOptions, TestContext.Current.CancellationToken);
+        created.ShouldNotBeNull();
+
+        var deleteResponse = await authedClient.DeleteAsync($"/api/fields/{created.Id}", TestContext.Current.CancellationToken);
         deleteResponse.StatusCode.ShouldBe(HttpStatusCode.NoContent);
 
-        var getAfterDelete = await _client.GetAsync($"/api/fields/{fieldId}", TestContext.Current.CancellationToken);
+        var getAfterDelete = await authedClient.GetAsync($"/api/fields/{created.Id}", TestContext.Current.CancellationToken);
         getAfterDelete.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 

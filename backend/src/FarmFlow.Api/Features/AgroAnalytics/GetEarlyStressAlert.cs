@@ -1,6 +1,7 @@
+using System.Security.Claims;
+using FarmFlow.Api.Infrastructure.Auth;
 using FarmFlow.Api.Infrastructure.Database;
 using FarmFlow.Api.Infrastructure.Nasa;
-using Microsoft.EntityFrameworkCore;
 
 namespace FarmFlow.Api.Features.AgroAnalytics;
 
@@ -27,11 +28,12 @@ public static class GetEarlyStressAlert
 
     public static async Task<IResult> Handle(
         Guid id,
+        ClaimsPrincipal principal,
         AppDbContext db,
         INasaClient nasaClient,
         CancellationToken ct)
     {
-        var field = await db.Fields.AsNoTracking().FirstOrDefaultAsync(f => f.Id == id, ct);
+        var field = await db.GetAccessibleFieldAsync(id, principal, ct);
         if (field is null)
         {
             return Results.NotFound();

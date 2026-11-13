@@ -1,6 +1,13 @@
+using System.Net.Http.Json;
+using FarmFlow.Api.Features.Auth;
+using FarmFlow.Api.Infrastructure.Auth;
 using FarmFlow.Api.Infrastructure.Database;
+using FarmFlow.Api.Infrastructure.Database.Entities;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
@@ -63,11 +70,76 @@ public sealed class FarmFlowWebFactory : WebApplicationFactory<Program>, IAsyncL
         await action(db);
     }
 
+    public async Task<User> SeedUserAsync(
+        string subject,
+        string email,
+        string displayName,
+        string? customDisplayName = null,
+        string? avatarUrl = "https://example.com/avatar.png")
+    {
+        var now = DateTimeOffset.UtcNow;
+        var user = new User
+        {
+            Id = Guid.NewGuid(),
+            GoogleSubjectId = subject,
+            Email = email,
+            GoogleDisplayName = displayName,
+            CustomDisplayName = customDisplayName,
+            AvatarUrl = avatarUrl,
+            CreatedAtUtc = now,
+            UpdatedAtUtc = now
+        };
+
+        await ExecuteWithDbAsync(async db =>
+        {
+            db.Users.Add(user);
+            await db.SaveChangesAsync();
+        });
+
+        return user;
+    }
+
+    public async Task<HttpClient> CreateAuthenticatedClientAsync(Guid userId, bool attachCsrf = true)
+    {
+        var client = CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false,
+            HandleCookies = true
+        });
+        client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeader, userId.ToString());
+
+        if (attachCsrf)
+        {
+            var csrf = await client.GetFromJsonAsync<GetCsrfToken.Response>("/api/auth/csrf");
+            client.DefaultRequestHeaders.Add(csrf!.HeaderName, csrf.Token);
+        }
+
+        return client;
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseSetting("ConnectionStrings:DefaultConnection", _dbContainer.GetConnectionString());
         builder.UseSetting("Database:SeedOnStartup", "false");
         builder.UseSetting("NasaSettings:ForceMock", "true");
+
+        builder.ConfigureTestServices(services =>
+        {
+            services.AddAuthentication(options =>
+                {
+                    options.DefaultScheme = "DynamicTestOrCookie";
+                    options.DefaultAuthenticateScheme = "DynamicTestOrCookie";
+                    options.DefaultChallengeScheme = "DynamicTestOrCookie";
+                })
+                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>(TestAuthHandler.SchemeName, _ => { })
+                .AddPolicyScheme("DynamicTestOrCookie", "Test or Cookie", options =>
+                {
+                    options.ForwardDefaultSelector = ctx =>
+                        ctx.Request.Headers.ContainsKey(TestAuthHandler.UserIdHeader)
+                            ? TestAuthHandler.SchemeName
+                            : CookieAuthenticationDefaults.AuthenticationScheme;
+                });
+        });
     }
 
     public new async ValueTask DisposeAsync()

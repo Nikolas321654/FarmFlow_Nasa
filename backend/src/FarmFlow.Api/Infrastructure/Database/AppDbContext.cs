@@ -5,12 +5,24 @@ namespace FarmFlow.Api.Infrastructure.Database;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
+    public DbSet<User> Users => Set<User>();
     public DbSet<Field> Fields => Set<Field>();
     public DbSet<AlertFeedback> AlertFeedbacks => Set<AlertFeedback>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasPostgresExtension("postgis");
+
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasKey(u => u.Id);
+            entity.Property(u => u.GoogleSubjectId).HasMaxLength(255).IsRequired();
+            entity.HasIndex(u => u.GoogleSubjectId).IsUnique();
+            entity.Property(u => u.Email).HasMaxLength(320).IsRequired();
+            entity.Property(u => u.GoogleDisplayName).HasMaxLength(200).IsRequired();
+            entity.Property(u => u.CustomDisplayName).HasMaxLength(100);
+            entity.Property(u => u.AvatarUrl).HasMaxLength(2048);
+        });
 
         modelBuilder.Entity<Field>(entity =>
         {
@@ -20,6 +32,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entity.Property(f => f.Boundary).HasColumnType("geometry (polygon, 4326)").IsRequired();
             entity.Property(f => f.Centroid).HasColumnType("geometry (point, 4326)").IsRequired();
             entity.Property(f => f.DemoScenario).HasMaxLength(64);
+            entity.Property(f => f.IsDemo).HasDefaultValue(false);
+            entity.HasIndex(f => f.OwnerId);
+            entity.HasIndex(f => f.IsDemo);
+            entity.HasOne(f => f.Owner)
+                .WithMany()
+                .HasForeignKey(f => f.OwnerId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<AlertFeedback>(entity =>

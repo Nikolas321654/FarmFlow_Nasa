@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using FarmFlow.Api.Infrastructure.Auth;
 using FarmFlow.Api.Infrastructure.Database;
 using FarmFlow.Api.Infrastructure.Database.Entities;
 using FarmFlow.Api.Infrastructure.Nasa;
@@ -16,15 +18,23 @@ public static class CreateField
 
     public static void MapEndpoint(IEndpointRouteBuilder app) =>
         app.MapPost("/api/fields", Handle)
+           .RequireAuthorization()
+           .AddEndpointFilter<CsrfValidationFilter>()
            .WithTags("Fields")
-           .WithSummary("Creates a field from a GeoJSON polygon and computes geodetic area and centroid.");
+           .WithSummary("Creates a private field for the signed-in user from a GeoJSON polygon.");
 
     public static async Task<IResult> Handle(
         Request request,
+        ClaimsPrincipal principal,
         AppDbContext db,
         INasaClient nasaClient,
         CancellationToken ct)
     {
+        var userId = principal.GetUserIdOrNull();
+        if (userId is null)
+        {
+            return Results.Unauthorized();
+        }
         var errors = ValidateMetadata(request);
         if (errors.Count > 0)
         {
@@ -62,7 +72,9 @@ public static class CreateField
             Boundary = boundary,
             Centroid = GeoCalculator.CalculateCentroid(boundary),
             AreaHectares = areaHectares,
-            DemoScenario = null
+            DemoScenario = null,
+            OwnerId = userId.Value,
+            IsDemo = false
         };
 
         db.Fields.Add(field);

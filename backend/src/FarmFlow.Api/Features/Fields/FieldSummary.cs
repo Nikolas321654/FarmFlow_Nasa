@@ -16,7 +16,8 @@ public record FieldSummaryResponse(
     string WorkabilityStatus,
     bool HasActiveStressAlert,
     bool HasBiomassAnomaly,
-    Polygon Boundary);
+    Polygon Boundary,
+    bool IsDemo = false);
 
 internal static class FieldSummaryMapper
 {
@@ -43,6 +44,7 @@ internal static class FieldSummaryMapper
             WorkabilityStatus: workability.Status,
             HasActiveStressAlert: stress.IrrigationRecommended || stress.IsHiddenStressDetected,
             HasBiomassAnomaly: biomass.IsAnomalyDetected,
-            Boundary: field.Boundary);
+            Boundary: field.Boundary,
+            IsDemo: field.IsDemo);
     }
 }
