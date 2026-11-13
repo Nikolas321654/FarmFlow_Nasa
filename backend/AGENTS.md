@@ -37,7 +37,7 @@ Read and align with these documents before making architectural or contract chan
    - Group slice route registrations via extension methods (e.g., `app.MapSystemEndpoints()`). Keep `Program.cs` strictly as the composition root (with `public partial class Program;` for integration testing).
    - Do **not** introduce N-tier/Clean Architecture layers (`Controllers`, `BLL`, `DAL`, `Repositories`, `MediatR`) or `IFooService` wrappers for single-implementation logic—inject `AppDbContext` directly into handlers.
 2. **Respect Hard Out-of-Scope Guardrails (@docs/scope.md):**
-   - No Auth/JWT/RBAC, no GraphQL/gRPC, no message brokers, no live HDF5/GeoTIFF parsing in .NET, no synchronous AppEEARS polling, and no separate Python inference service.
+   - Authentication is **Google-only OAuth + Cookie session** (`OwnerId` personal ownership + public `IsDemo` fields): do **not** add email/password auth, JWT token plumbing, RBAC/teams/orgs, or field sharing. No GraphQL/gRPC, no message brokers, no live HDF5/GeoTIFF parsing in .NET, no synchronous AppEEARS polling, and no separate Python inference service.
 3. **Preserve Slice Isolation (@backend/docs/architecture.md):**
    - Keep feature slices decoupled and free of cross-slice hacks so parallel work and isolated testing remain clean.
 
@@ -66,6 +66,11 @@ All backend code must strictly adhere to **SOLID** and clean C# practices:
 - **Idiomatic C#:** Use primary constructors, immutable `record` DTOs, target-typed `new`, pattern matching / `switch` expressions, `AsNoTracking()` on read queries, and pass `CancellationToken` through every async call.
 - **DRY & Shallow Nesting:** Centralize shared formulas (`AgroFormulas`) and spatial math (`GeoCalculator`). Keep methods focused with early returns and shallow nesting.
 - **Minimal, High-Signal Comments Only:** Do **not** add `/// <summary>` XML doc bloat on self-explanatory classes/methods or obvious comments that restate the code. Only comment non-obvious *why* (e.g., NASA API quirks or non-trivial invariants).
+- **Auth, Ownership & Security Safety:**
+  - Key Google users strictly by immutable **`sub`** (`GoogleSubjectId`), never by email, and never overwrite `CustomDisplayName` on repeat logins.
+  - Never trust client-supplied `UserId`, `OwnerId`, or `IsDemo` values; assign ownership server-side from claims.
+  - Validate OAuth `returnUrl` against local paths / `Auth:AllowedRedirectOrigins` (no open redirects), enforce CSRF on cookie-authenticated mutations (`POST`/`PATCH`/`DELETE`), preserve `HttpOnly`/`SameSite`/`Secure` cookie flags, never use wildcard CORS with credentials, and never log OAuth secrets, tokens, or raw cookies.
+  - Filter private vs. demo field visibility (`IsDemo || OwnerId == currentUserId`) in SQL **before** calling `INasaClient` or running formulas, using a shared reusable access helper rather than duplicating authorization logic across slices (`404` for inaccessible private fields).
 - **NASA Data Safety:** Never let `-999.0` sentinel values or uninitialized arrays reach agronomic formulas or ONNX tensors; detect missing data and trigger `ResilientNasaClient` fallback.
 - **SonarAnalyzer Compliance:** Write code that satisfies `SonarAnalyzer.CSharp` cleanly—use `await app.RunAsync()`, avoid insecure wildcard CORS in production, dispose resources cleanly, and never swallow exceptions silently. **Do not** suppress analyzer warnings (`#pragma warning disable` / `SuppressMessage`) unless strictly unavoidable and explained in a comment.
 
@@ -80,6 +85,7 @@ All backend code must strictly adhere to **SOLID** and clean C# practices:
   - Test HTTP clients and resilience decorators (`NasaPowerClient`, `ResilientNasaClient`) using a lightweight fake `HttpMessageHandler` and a real in-memory `HybridCache` (`AddMemoryCache()` + `AddHybridCache()`), verifying `-999.0` rejection, timeout fallback, coordinate rounding, and caching without heavy mocking frameworks or EF InMemory hacks.
 - **Integration Tests (`Integration/`):**
   - Use **`WebApplicationFactory<Program>`** backed by **`Testcontainers.PostgreSql`** with a multi-arch PostGIS image (`new PostgreSqlBuilder().WithImage("imresamu/postgis:17-3.5-alpine")`, never `:latest`).
+  - Authenticate test requests deterministically with a lightweight **`TestAuthHandler`** (`AuthenticationSchemeOptions`) + anti-forgery test cookies/headers—never hit live Google OAuth endpoints in tests.
   - Share a single container across integration tests via **`ICollectionFixture<T>`** and `xUnit v3` `IAsyncLifetime` (`ValueTask InitializeAsync()` / `ValueTask DisposeAsync()`). Run `await db.Database.MigrateAsync()` once on startup.
   - Reset state between tests using **`Respawn`** (`Respawner.ResetAsync`), explicitly excluding `__EFMigrationsHistory` and PostGIS system tables (`spatial_ref_sys`, `geometry_columns`, `geography_columns`, `raster_columns`, `raster_overviews`).
   - Stub external NASA HTTP calls inside `WebApplicationFactory` (`HttpMessageHandler` / deterministic fixtures) so integration tests never depend on live external APIs.

@@ -21,7 +21,8 @@ To maximize development velocity during the hackathon and eliminate merge confli
 | Layer | Technology | Purpose |
 | :--- | :--- | :--- |
 | **Runtime & Web Framework** | **.NET 10** + **ASP.NET Core Minimal APIs** | High-performance HTTP APIs with minimal ceremony |
-| **Database** | **PostgreSQL + PostGIS (`latest`)** | Relational storage + native spatial types (`Polygon`, `Point`, GeoJSON) |
+| **Authentication & Security** | **ASP.NET Core Google OAuth (`Microsoft.AspNetCore.Authentication.Google`) + Cookie Auth + `IAntiforgery` + `ForwardedHeaders`** | Google-only sign-in keyed by `sub`, persistent `HttpOnly` session cookies, CSRF protection, and reverse-proxy HTTPS handling |
+| **Database** | **PostgreSQL + PostGIS (`imresamu/postgis:17-3.5-alpine`)** | Relational storage + native spatial types (`Polygon`, `Point`, GeoJSON) |
 | **ORM & Spatial Mapping** | **EF Core 10** + `Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite` | Direct mapping of PostGIS geometries to `NetTopologySuite` types |
 | **GIS / Geometry Engine** | **NetTopologySuite** + `NetTopologySuite.IO.GeoJSON4STJ` | Polygon validation, centroid calculation, and area conversion (hectares) |
 | **Caching & Resilience** | `IHttpClientFactory` + `HybridCache` / `IMemoryCache` | Caching NASA coordinate responses and falling back to mock fixtures |
@@ -49,11 +50,15 @@ backend/
         ├── Program.cs                         # DI registration, middleware, endpoint mapping
         ├── appsettings.json
         ├── Infrastructure/
+        │   ├── Auth/
+        │   │   ├── AuthConfiguration.cs       # Cookie + Google OAuth (sub-keyed), CSRF, ForwardedHeaders, returnUrl guard
+        │   │   └── FieldAccessExtensions.cs   # Shared SQL visibility filter (IsDemo || OwnerId == currentUserId) & current user ID resolution
         │   ├── Database/
-        │   │   ├── AppDbContext.cs            # EF Core context with PostGIS configuration
-        │   │   ├── DbSeeder.cs                # Pre-seeded demo fields for instant pitch readiness
+        │   │   ├── AppDbContext.cs            # EF Core context with PostGIS & User/Field identity configuration
+        │   │   ├── DbSeeder.cs                # Idempotent per-ID seeder for the 4 public demo fields
         │   │   └── Entities/
-        │   │       ├── Field.cs               # Polygon, Centroid, AreaHa, CropType, PlantedAt
+        │   │       ├── User.cs                # GoogleSubjectId (sub), Email, GoogleDisplayName, CustomDisplayName, AvatarUrl
+        │   │       ├── Field.cs               # Polygon, Centroid, AreaHa, CropType, PlantedAt, OwnerId?, IsDemo
         │   │       └── AlertFeedback.cs       # Farmer feedback on alerts (Yes/No accuracy)
         │   ├── Spatial/
         │   │   └── GeoCalculator.cs           # NetTopologySuite area (ha) & centroid calculation
@@ -70,11 +75,18 @@ backend/
         │           ├── yield_model.onnx       # Tabular yield regressor
         │           └── soil_forecast.onnx     # Deep Learning 7-day soil/ET forecaster
         └── Features/
+            ├── Auth/
+            │   ├── StartGoogleLogin.cs        # GET  /api/auth/google (OAuth challenge + safe returnUrl)
+            │   ├── GetCsrfToken.cs            # GET  /api/auth/csrf (Anti-forgery cookie + request token)
+            │   ├── GetCurrentUser.cs          # GET  /api/auth/me (authenticated state + effective displayName)
+            │   └── Logout.cs                  # POST /api/auth/logout (CSRF-protected session sign-out)
+            ├── Users/
+            │   └── UpdateMyProfile.cs         # PATCH /api/users/me (CustomDisplayName update)
             ├── Fields/
-            │   ├── CreateField.cs             # POST /api/fields (GeoJSON -> Polygon, AreaHa, Centroid)
-            │   ├── GetFields.cs               # GET  /api/fields
-            │   ├── GetFieldById.cs            # GET  /api/fields/{id}
-            │   └── DeleteField.cs             # DELETE /api/fields/{id}
+            │   ├── CreateField.cs             # POST /api/fields (Auth + CSRF, OwnerId, IsDemo = false)
+            │   ├── GetFields.cs               # GET  /api/fields (DB-filtered: IsDemo || OwnerId)
+            │   ├── GetFieldById.cs            # GET  /api/fields/{id} (404 on missing or non-owned private)
+            │   └── DeleteField.cs             # DELETE /api/fields/{id} (401/403/404 ownership & demo guard)
             ├── AgroAnalytics/
             │   ├── AgroFormulas.cs            # Pure static calculation methods for agronomic indices
             │   ├── GetFieldDashboard.cs       # GET  /api/fields/{id}/dashboard (Unified metrics + alerts)
@@ -102,15 +114,15 @@ backend/
 flowchart TD
     UI["Frontend Dashboard (Map + Charts + Action Cards)"]
     API["ASP.NET Core Minimal APIs (Vertical Slices)"]
-    DB[("PostgreSQL + PostGIS\n(Fields, Polygons, Feedback)")]
+    DB[("PostgreSQL + PostGIS\n(Users, Fields, Polygons, Feedback)")]
     Resilient["ResilientNasaClient\n(HybridCache + 3s Timeout Fallback)"]
     LiveNASA["NasaPowerClient\n(NASA POWER REST API)"]
     MockNASA["MockNasaClient\n(Pre-extracted AppEEARS / POWER Fixtures)"]
     AgroEngine["Agro Decision Engine\n(Workability, WDI, Irrigation, Biomass)"]
     ONNX["OnnxModelRegistry (Singleton)\n(yield_model.onnx & soil_forecast.onnx)"]
 
-    UI <-->|JSON + GeoJSON| API
-    API <-->|EF Core + NetTopologySuite| DB
+    UI <-->|"JSON + GeoJSON\n(HttpOnly Cookie + CSRF)"| API
+    API <-->|"EF Core + NetTopologySuite\n(IsDemo || OwnerId Guard)"| DB
     API --> Resilient
     Resilient -->|Cache Miss| LiveNASA
     Resilient -.->|Timeout / -999 / Offline Mode| MockNASA
@@ -121,9 +133,18 @@ flowchart TD
 
 ---
 
-## 5. Database & Spatial Design (PostGIS)
+## 5. Database, Identity & Spatial Design (PostGIS)
 
 Using `Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite`, spatial columns use SRID `4326` (WGS 84):
+
+### `User` Entity
+- `Id` (`Guid`, PK)
+- `GoogleSubjectId` (`string`, unique index) — immutable Google `sub` claim (primary account identity; never key users by email)
+- `Email` (`string`) — synced read-only from Google claims on login
+- `GoogleDisplayName` (`string`) — synced from Google `name` claim
+- `CustomDisplayName` (`string?`) — editable via `PATCH /api/users/me`; **never overwritten** on repeat Google logins (`displayName = CustomDisplayName ?? GoogleDisplayName`)
+- `AvatarUrl` (`string?`) — synced from Google `picture` claim
+- `CreatedAtUtc` (`DateTimeOffset`), `UpdatedAtUtc` (`DateTimeOffset`)
 
 ### `Field` Entity
 - `Id` (`Guid`, PK)
@@ -134,6 +155,12 @@ Using `Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite`, spatial columns 
 - `Centroid` (`NetTopologySuite.Geometries.Point`, `geometry(Point, 4326)`)
 - `AreaHectares` (`double`) — computed on creation from `Boundary`
 - `DemoScenario` (`string?`) — optional tag (`"optimal"`, `"water_stress"`, `"pest_anomaly"`, `"rain_blocked"`) allowing deterministic demo scenarios for seeded fields while supporting live coordinates for newly drawn fields.
+- `OwnerId` (`Guid?`, nullable FK $\rightarrow$ `User.Id`, indexed) — `null` only for seeded public demo fields (or pre-migration legacy rows); server-assigned on `POST /api/fields`
+- `IsDemo` (`bool`, default `false`) — `true` only for the 4 seeded public demo fields
+
+### Migration Safety & Idempotent `DbSeeder`
+- **Safe Backfill Migration:** Adding `IsDemo` and `OwnerId` must set `IsDemo = true` **exclusively** for the 4 known seeded demo IDs (`11111111-...` through `44444444-...`). Any existing ownerless non-demo rows stay `IsDemo = false` so they never become guest-visible.
+- **Per-ID Seeder Idempotency:** `DbSeeder` must never short-circuit on `db.Fields.AnyAsync()`; instead it checks/inserts each of the 4 demo field IDs individually with `IsDemo = true, OwnerId = null`.
 
 ### `AlertFeedback` Entity
 - `Id` (`Guid`, PK)
@@ -142,6 +169,16 @@ Using `Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite`, spatial columns 
 - `IsAccurate` (`bool`)
 - `Comment` (`string?`)
 - `CreatedAt` (`DateTimeOffset`)
+
+---
+
+## 5A. Authentication, CSRF & Field Isolation Architecture
+
+1. **Google-Only OAuth + Persistent Cookie Session:** Configured in `Infrastructure/Auth/AuthConfiguration.cs` using ASP.NET Core Cookie Authentication (`HttpOnly`, `SameSite=Lax`, conditional `Secure` for HTTPS) + Google OAuth 2.0 (`sub`-keyed upsert in OAuth callback; minimal `openid profile email` scopes). No Google access/ID/refresh tokens or client secrets are ever returned to React or logged.
+2. **Reverse-Proxy & Deployment Readiness:** Call `UseForwardedHeaders()` (`X-Forwarded-For`, `X-Forwarded-Proto`) before auth middleware so OAuth `redirect_uri` resolves to `https://` behind reverse proxies, and persist ASP.NET Core Data Protection keys in deployed environments so sessions survive container restarts.
+3. **CSRF, CORS & Open-Redirect Guards:** State-changing cookie routes (`POST /api/auth/logout`, `POST /api/fields`, `DELETE /api/fields/{id}`, `PATCH /api/users/me`, `POST /api/alerts/{id}/feedback`) validate `X-CSRF-TOKEN` issued by `GET /api/auth/csrf`. Configure `Cors:AllowedOrigins` explicitly with `AllowCredentials()` (never wildcard `*`), and validate `/api/auth/google?returnUrl=...` against local relative URLs or `Auth:AllowedRedirectOrigins`.
+4. **Shared SQL Ownership Filter (`FieldAccessExtensions`):** All field catalog, field detail, and `AgroAnalytics` endpoints (and future `Predictions`/`Alerts` slices) filter in PostgreSQL via a shared `.AccessibleTo(currentUserId)` helper (`f => f.IsDemo || (userId != null && f.OwnerId == userId)`) **before** calling `INasaClient` or executing formulas. Private inaccessible fields return `404 Not Found`.
+5. **Google Cloud Console Setup Checklist:** Create a Web Application OAuth 2.0 Client (`ClientId`, `ClientSecret` via env/user-secrets — never committed), register `https://<api-host>/api/auth/google/callback` (and localhost dev callback) under Authorized Redirect URIs, and publish the OAuth Consent Screen as **External (Production)** before public demo so any user's Google account can sign in.
 
 ---
 
@@ -242,11 +279,15 @@ public static class GetWorkabilityWindow
 
     public static async Task<IResult> Handle(
         Guid id,
+        ClaimsPrincipal user,
         AppDbContext db,
         INasaClient nasaClient,
         CancellationToken ct)
     {
-        var field = await db.Fields.AsNoTracking().FirstOrDefaultAsync(f => f.Id == id, ct);
+        var field = await db.Fields
+            .AsNoTracking()
+            .AccessibleTo(user.GetUserIdOrNull())
+            .FirstOrDefaultAsync(f => f.Id == id, ct);
         if (field is null) return Results.NotFound();
 
         var series = await nasaClient.GetFieldSeriesAsync(
@@ -290,6 +331,7 @@ public static class GetWorkabilityWindow
 - **Collection Serialization & Migrations:** An xUnit `[CollectionDefinition("PostgresIntegration")]` shares the container across integration test classes so `MigrateAsync()` executes once per test run without parallel reset races.
 - **Fast Database Reset (`Respawn`):** Each test implements `IAsyncLifetime` (`ValueTask InitializeAsync()` in `xUnit v3`) to reset user tables in milliseconds via `Respawner.ResetAsync`, explicitly excluding `__EFMigrationsHistory`, `spatial_ref_sys`, `geometry_columns`, `geography_columns`, `raster_columns`, and `raster_overviews`.
 - **Deterministic External Isolation & Filtering:** Integration tests override external NASA HTTP calls with deterministic fixtures / fake handler so tests never depend on live external APIs, and mark integration classes with `[Trait("Category", "Integration")]` to allow fast offline filtering (`--filter "Category!=Integration"`).
+- **Deterministic Auth Simulation (`TestAuthHandler`):** Integration tests inject a lightweight `TestAuthHandler` + CSRF header/cookie helpers to test first/repeat Google logins (`sub` lookup, `CustomDisplayName` preservation), guest vs. authenticated visibility, `401`/`403`/`404` ownership isolation, and `DbSeeder` idempotency without calling live Google OAuth endpoints.
 
 ---
 
@@ -307,6 +349,8 @@ public static class GetWorkabilityWindow
 | **P0-6** | 🟢 P0 | F2: Workability & Spraying Advisor (48h) | `Features/AgroAnalytics/GetWorkabilityWindow.cs`, `AgroFormulas.cs` | `spnch` |
 | **P0-7** | 🟢 P0 | F3: Early Thermal & Stress Detection (WDI) | `Features/AgroAnalytics/GetEarlyStressAlert.cs`, `AgroFormulas.cs` | `spnch` |
 | **P0-8** | 🟢 P0 | F4: Vegetation Anomaly Scout ($\Delta\text{NDVI}$) | `Features/AgroAnalytics/GetBiomassTrend.cs`, `AgroFormulas.cs` | `spnch` |
+| **P0-9** | 🟢 P0 | Google-Only Auth & Persistent User Profile | `Infrastructure/Auth/AuthConfiguration.cs`, `Features/Auth/*`, `Features/Users/UpdateMyProfile.cs`, `Entities/User.cs` | `spnch` |
+| **P0-10** | 🟢 P0 | Guest Demo Mode, CSRF & Private Field Isolation | `Infrastructure/Auth/FieldAccessExtensions.cs`, `Features/Fields/*`, `Features/AgroAnalytics/*` | `spnch` |
 | **P1-1** | 🔵 P1 | 7-Day Soil Moisture & ESI Forecaster (LSTM/CNN) | `backend/ml/train_soil_forecast.py` $\rightarrow$ `Features/Predictions/ForecastSoilMoisture.cs` | `spnch` |
 | **P1-2** | 🔵 P1 | 72-Hour Proactive Stress Alert | `Features/Predictions/ForecastSoilMoisture.cs` + `AgroFormulas.CalculateWaterDeficitIndex` | `spnch` |
 | **P1-3** | 🔵 P1 | End-of-Season Yield Predictor (Tabular ML) | `backend/ml/train_yield_model.py` $\rightarrow$ `Features/Predictions/PredictYield.cs` | `spnch` |
@@ -318,6 +362,6 @@ public static class GetWorkabilityWindow
 
 | Area | Primary Components | Directories |
 | :--- | :--- | :--- |
-| **Core Backend MVP** | PostGIS Database & Seeding, Field CRUD, Spatial Engine, NASA Pipeline, Deterministic Agro Formulas | `Infrastructure/Database/`, `Infrastructure/Spatial/`, `Infrastructure/Nasa/`, `Features/Fields/`, `Features/AgroAnalytics/`, `Features/Alerts/` |
+| **Core Backend MVP** | PostGIS Database & Seeding, Google Auth & Ownership Isolation, Field CRUD, Spatial Engine, NASA Pipeline, Deterministic Agro Formulas | `Infrastructure/Auth/`, `Infrastructure/Database/`, `Infrastructure/Spatial/`, `Infrastructure/Nasa/`, `Features/Auth/`, `Features/Users/`, `Features/Fields/`, `Features/AgroAnalytics/`, `Features/Alerts/` |
 | **AI/ML & Forecasting** | Python ML/DL Training & `.onnx` Inference | `Infrastructure/Ml/`, `Features/Predictions/`, `backend/ml/` |
-| **Automated Verification** | Unit Tests + PostGIS Testcontainers Integration Tests | `tests/FarmFlow.Api.Tests/` |
+| **Automated Verification** | Unit Tests + PostGIS Testcontainers Integration Tests (`TestAuthHandler`) | `tests/FarmFlow.Api.Tests/` |
