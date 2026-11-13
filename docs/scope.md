@@ -28,6 +28,8 @@ If Tier P0 is complete, the product is fully functional and ready to demo on sta
 | **P0-6** | **Agro Decision Engine** | **F2: Workability & Spraying Advisor** | Compute 48h field status (🟢 `Optimal`, 🟡 `Marginal`, 🔴 `Blocked`) and block chemical spraying if `rain_12h > 10mm` or `forecast_24h >= 5mm`. |
 | **P0-7** | **Agro Decision Engine** | **F3: Early Thermal & Stress Detection** | Compute $\text{WaterDeficitIndex} = 1.0 - (0.6 \cdot \mathrm {sm\_rootzone} + 0.4 \cdot \text{esi})$. Trigger hidden stress warning when $\text{WDI} > 0.65$ despite stable $\text{NDVI}$. |
 | **P0-8** | **Agro Decision Engine** | **F4: Vegetation Anomaly Scout** | Compute ΔNDVI = NDVI<sub>current</sub> − NDVI<sub>14d_avg</sub>. Trigger pest/disease scouting alert when ΔNDVI < −0.12 while soil moisture is healthy. |
+| **P0-9** | **Auth & Field Ownership** | **Google Sign-In & Profile** | Authenticate solely via server-side Google OAuth + persistent `HttpOnly` session cookie keyed by Google `sub`. Support persistent `CustomDisplayName` (`PATCH /api/users/me`), read-only email, and Google avatar without overwriting custom name on repeat sign-in. |
+| **P0-10** | **Auth & Field Ownership** | **Guest Demo Mode & Data Isolation** | Unauthenticated guests can view only the 4 public demo fields (`IsDemo = true`) and their analytics. Creating/deleting private fields (`OwnerId`) requires Google sign-in; private fields return `404` to guests and other users across all field and analytics endpoints. |
 
 ---
 
@@ -58,7 +60,7 @@ Quick, high-visibility touches for judges if P0 and P1 are complete ahead of sch
 To protect the hackathon deadline, the following are **strictly out of scope**:
 - ❌ **No Live HDF5 / Raw GeoTIFF Raster Parsing in .NET:** We do not download or decompress multi-gigabyte raw satellite `.hdf5` or `.tif` files on the fly. We use NASA POWER JSON endpoints + pre-extracted AppEEARS data slices.
 - ❌ **No Synchronous AppEEARS Task Queueing:** AppEEARS asynchronous jobs take minutes to hours to process; all AppEEARS data for demo regions is pre-extracted offline.
-- ❌ **No User Authentication / RBAC / Multi-Tenancy:** No login screens, JWT plumbing, or OAuth. The app opens directly into the farmer's workspace.
+- ❌ **No Email/Password Auth, Multi-Provider Login, RBAC, Teams, or Field Sharing:** Authentication is strictly Google-only with personal `OwnerId` isolation alongside public `IsDemo` fields—no local passwords, magic links, JWT plumbing in browser JS, anonymous 24h accounts, roles, organizations, or shared permissions.
 - ❌ **No Python Microservice in Production:** Python is used strictly offline in `backend/ml/` to train and export `.onnx` artifacts. Production inference runs 100% inside the `.NET 10` API via `Microsoft.ML.OnnxRuntime`.
 - ❌ **No Heavy CV / Drone Image Classification or RL:** No CNN leaf-disease photo classifiers or Reinforcement Learning schedulers.
 - ❌ **No Message Brokers, GraphQL, or Multi-Project N-Tier Boilerplate:** Keep a single `.NET 10` project (`FarmFlow.Api`) using Vertical Slices.
