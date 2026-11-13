@@ -17,8 +17,8 @@ If documents conflict, follow approved P0 scope and `frontend/docs/design.md`; r
 
 ## Actual Repository State (verified 2026-11-13)
 
-- Branch `frontend` currently contains docs, logos, UI mockups, ESLint/Prettier and a minimal `frontend/package.json`. It has **no `frontend/src/`, Vite application, or `dev`/`build` scripts** yet.
-- Implemented backend exists on **separate branch `backend`**, not in `frontend`: .NET 10 Minimal API, PostgreSQL/PostGIS, Google OAuth with cookie sessions and CSRF, field ownership, four seeded demo fields, NASA analytics and tests.
+- Branch `frontend` contains a React/TypeScript/Vite application, the approved application shell and routes, shared UI primitives, typed API client, DTOs and TanStack Query hooks.
+- The current checkout also contains the .NET 10 backend source under `backend/`: Minimal API, PostgreSQL/PostGIS, Google OAuth with cookie sessions and CSRF, field ownership, four seeded demo fields, NASA analytics and tests.
 - Actual backend `GET /api/fields` includes `isDemo` (via `FieldSummaryResponse`), although the example in `docs/api.md` omits it. Use `isDemo`; never classify by field name or hardcoded IDs.
 - P1 ONNX predictions and Action Center endpoints are documented but not present in the inspected backend code. Do not build P1/P2 UI without an explicit task.
 
@@ -42,7 +42,7 @@ If documents conflict, follow approved P0 scope and `frontend/docs/design.md`; r
 - Stack: React, TypeScript, Vite, TailwindCSS, React Router, TanStack Query, React Leaflet/Leaflet, Leaflet-Geoman, Recharts, FontAwesome.
 - FSD folders: `src/app`, `pages`, `widgets`, `features`, `entities`, `shared`; import downward only. Use named exports and slice `index.ts` public APIs.
 - Shared HTTP client/config in `shared/api`; typed DTOs/query hooks in relevant slices. Never fetch directly from UI components.
-- TanStack Query owns server state; React Router owns route state; use React state/Context for simple UI state. Do not add Zustand, Redux, React Hook Form, Zod, MapLibre or KML just because older architecture notes mention them.
+- TanStack Query owns server state; React Router owns route state; use React state/Context for simple UI state. Do not add Zustand, Redux, React Hook Form, Zod, MapLibre or KML without an approved need.
 - Keep business rules outside JSX; reuse components/types. Do not edit backend without an explicit task.
 
 ## Backend API Integration
@@ -65,7 +65,7 @@ If documents conflict, follow approved P0 scope and `frontend/docs/design.md`; r
 
 ## Verification & Git
 
-- Current scripts under `frontend/`: `npm run lint`, `npm run format:check`, `npm run format`. Add and verify `dev`, `build`, and relevant test scripts during Vite setup.
+- Current scripts under `frontend/`: `npm run dev`, `npm run build`, `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run format`, and `npm run preview`.
 - Run applicable checks after changes. Report actual results and any checks that could not run.
 - **Small changes:** Commit directly to the `frontend` branch. This includes configuration, minor UI improvements, small bug fixes, styling adjustments, and documentation.
 - **Major changes:** Create a short-lived `feature/*`, `fix/*`, or `refactor/*` branch from `frontend` and open a PR targeting `frontend`. This includes new major features, authentication, API integrations, and architectural changes.

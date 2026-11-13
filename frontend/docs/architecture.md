@@ -12,11 +12,11 @@ If a new architectural decision is made, propose adding it to Section 6.
 ```
 src/
 ├── app/        # providers, router, global styles
-├── pages/      # map, field-details, plan
-├── widgets/    # field-map, field-dashboard
-├── features/   # draw-field, import-geojson, analyze-plan
-├── entities/   # field, crop, alert, planting-plan
-└── shared/     # api, ui, lib (geo, format), config, i18n
+├── pages/      # field-explorer, field-insights, add-field
+├── widgets/    # application shell and future map/dashboard blocks
+├── features/   # user actions and mutations
+├── entities/   # field and user data, API queries and types
+└── shared/     # api, ui, lib, config
 ```
 
 ### Rules
@@ -53,7 +53,7 @@ Other slices import **only** via `index.ts`.
 
 - HTTP client and base config: `shared/api/`.
 - API response types are defined explicitly in the entity's `model/`.
-- Mocks live in `[src/mocks/]` and match real API responses exactly.
+- Do not introduce mock API responses for implemented backend endpoints.
 - Thresholds and constants from the spec live in `shared/config/thresholds.ts` — never hardcode them.
 - API keys and URLs come from env (`shared/config`), never hardcoded.
 
@@ -61,10 +61,10 @@ Other slices import **only** via `index.ts`.
 ## 4. Map & Geodata
 
 - Coordinates: WGS84. **GeoJSON order is always `[lng, lat]`.**
-- `[If Leaflet: it uses [lat, lng] - convert only in shared/lib/geo/.]`
+- Leaflet uses `[lat, lng]`; convert coordinates in shared geodata utilities.
 - A `Field` is a GeoJSON `Polygon` (closed ring, ≥ 3 points).
-- Area and centroid only via `shared/lib/geo/` (`getFieldAreaHa`, `getFieldCentroid`); no direct Turf calls in components.
-- Import (GeoJSON/KML) only via `features/import-geojson`; validate before saving.
+- The backend is authoritative for field area and centroid; do not derive persisted values in the frontend.
+- GeoJSON import belongs in `features/import-geojson`; validate before saving.
 - The map instance lives only in `widgets/field-map`.
 
 
@@ -74,13 +74,13 @@ Other slices import **only** via `index.ts`.
 |----------------|-----------------------|-----------------------------------|
 | Server         | TanStack Query        | fields, analysis results          |
 | URL            | React Router          | selected field id, active tab     |
-| Global UI      | Zustand               | drawing mode, sidebar open        |
+| Shared UI      | React state/Context   | drawing mode, sidebar open        |
 | Local UI       | `useState`            | dropdown open                     |
-| Forms          | React Hook Form + Zod | create field, planting plan       |
+| Forms          | React state           | create field inputs               |
 
 ### Rules
-- **Never copy server data into Zustand or `useState`** - read it from the query hook.
-- After mutations, invalidate queries instead of patching data manually.
+- **Never copy server data into UI state** - read it from the query hook.
+- After data mutations, invalidate affected queries. On logout, clear private cached data before refetching public data.
 - Do not store derived values (area, statuses) - compute them.
 
 
@@ -93,7 +93,7 @@ Other slices import **only** via `index.ts`.
 | 2026-11-04 | Named exports only       | Safer refactoring, auto-imports       |
 
 ### Open questions
-- [ ] Map library: Leaflet or MapLibre?
-- [ ] Field geometry: `Polygon` only or `MultiPolygon` too?
+- [x] Map library: React Leaflet/Leaflet.
+- [x] Field geometry: GeoJSON `Polygon` for the current backend contract.
 
 Do not propose alternatives to listed decisions unless asked.

@@ -9,13 +9,22 @@ export function useLogout() {
     mutationFn: signOut,
     onSuccess: async () => {
       await queryClient.cancelQueries({ queryKey: fieldQueryKeys.all });
-      await queryClient.resetQueries({ queryKey: fieldQueryKeys.all });
-      queryClient.removeQueries({ queryKey: fieldQueryKeys.all });
+      // Clear active observers without refetching private field details after logout.
+      queryClient
+        .getQueryCache()
+        .findAll({ queryKey: fieldQueryKeys.all })
+        .forEach((query) => {
+          query.reset();
+        });
+      queryClient.removeQueries({ queryKey: fieldQueryKeys.details() });
       queryClient.setQueryData<CurrentUserResponse>(userQueryKeys.current, {
         authenticated: false,
         user: null,
       });
-      await queryClient.invalidateQueries({ queryKey: userQueryKeys.current });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: fieldQueryKeys.list() }),
+        queryClient.invalidateQueries({ queryKey: userQueryKeys.current }),
+      ]);
     },
   });
 }

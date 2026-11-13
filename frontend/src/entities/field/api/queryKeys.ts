@@ -1,6 +1,7 @@
 export const fieldQueryKeys = {
   all: ['fields'] as const,
   list: () => ['fields', 'list'] as const,
+  details: () => ['fields', 'detail'] as const,
   detail: (id: string) => ['fields', 'detail', id] as const,
   dashboard: (id: string, days?: number) =>
     ['fields', 'detail', id, 'dashboard', days ?? 14] as const,
