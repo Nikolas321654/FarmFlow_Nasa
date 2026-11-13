@@ -180,3 +180,8 @@ GEMINI.local.md
 playwright-report/
 test-results/
 TestResults/
+
+# Python ML workspace
+.venv/
+__pycache__/
+*.py[cod]
