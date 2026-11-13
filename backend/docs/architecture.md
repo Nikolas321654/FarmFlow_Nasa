@@ -21,14 +21,13 @@ To maximize development velocity during the hackathon and eliminate merge confli
 | Layer | Technology | Purpose |
 | :--- | :--- | :--- |
 | **Runtime & Web Framework** | **.NET 10** + **ASP.NET Core Minimal APIs** | High-performance HTTP APIs with minimal ceremony |
-| **Database** | **PostgreSQL + PostGIS (`latest`)** | Relational storage + native spatial types (`Polygon`, `Point`, GeoJSON) |
+| **Database** | **PostgreSQL 16 + PostGIS 3.4** | Relational storage + native spatial types (`Polygon`, `Point`, GeoJSON) |
 | **ORM & Spatial Mapping** | **EF Core 10** + `Npgsql.EntityFrameworkCore.PostgreSQL.NetTopologySuite` | Direct mapping of PostGIS geometries to `NetTopologySuite` types |
 | **GIS / Geometry Engine** | **NetTopologySuite** + `NetTopologySuite.IO.GeoJSON4STJ` | Polygon validation, centroid calculation, and area conversion (hectares) |
 | **Caching & Resilience** | `IHttpClientFactory` + `HybridCache` / `IMemoryCache` | Caching NASA coordinate responses and falling back to mock fixtures |
 | **AI/ML Inference (.NET)** | `Microsoft.ML.OnnxRuntime` | Running tabular ML and Deep Learning time-series models in-process |
 | **AI/ML Training (Python)** | **Python 3.12**, `scikit-learn`, `skl2onnx`, `PyTorch`, `onnx` | Offline model training and `.onnx` artifact generation |
 | **API Documentation** | **Scalar (`Scalar.AspNetCore`)** + `.http` files | Interactive OpenAPI testing and team alignment |
-| **Testing** | **`xUnit v3`**, **`Shouldly`**, **`WebApplicationFactory`**, **`Testcontainers.PostgreSql`**, **`Respawn`** | Fast unit tests, fake HTTP resilience tests, and isolated PostGIS endpoint tests |
 
 ---
 
@@ -87,11 +86,6 @@ backend/
             └── Alerts/
                 ├── GetActiveAlerts.cs         # GET  /api/alerts (Prioritized action cards across all fields)
                 └── SubmitAlertFeedback.cs     # POST /api/alerts/{id}/feedback
-└── tests/
-    └── FarmFlow.Api.Tests/
-        ├── FarmFlow.Api.Tests.csproj          # xUnit v3, Shouldly, Testcontainers.PostgreSql, Respawn
-        ├── Unit/                              # AgroFormulas, GeoCalculator, NasaPowerClient, ResilientNasaClient
-        └── Integration/                       # PostGIS + WebApplicationFactory + Respawn endpoint tests
 ```
 
 ---
@@ -278,29 +272,14 @@ public static class GetWorkabilityWindow
 
 ---
 
-## 10. Testing Architecture (`tests/FarmFlow.Api.Tests`)
+## 10. Scope Traceability & Team Work Split
 
-### 10.1 Unit Tests (`Unit/`) — Zero Docker, Zero Network
-- **Framework & Assertions:** `xUnit v3` (`xunit.v3`) paired with `Shouldly` (`<DebugType>embedded</DebugType>` so Release CI builds retain source expression diagnostics). Keep Shouldly calls directly inside `[Fact]` / `[Theory]` bodies to satisfy `SonarAnalyzer.CSharp` `S2699`.
-- **Domain & Spatial (`AgroFormulasTests`, `GeoCalculatorTests`):** Test boundary conditions for workability, WDI hidden stress, crop-specific irrigation doses, NDVI pest anomalies, WGS 84 validation, and geodetic hectares/centroids.
-- **NASA Resilience (`NasaPowerClientTests`, `ResilientNasaClientTests`):** Inject a lightweight fake `HttpMessageHandler` and real in-memory `HybridCache` (`AddMemoryCache` + `AddHybridCache`) to verify JSON parsing, `-999.0` sentinel rejection, 3.0s timeout fallback to `MockNasaClient`, HTTP failure recovery, and 2-decimal coordinate cache reuse.
-
-### 10.2 PostGIS Integration Tests (`Integration/`) — Containerized Parity
-- **Container & Factory Lifecycle:** `FarmFlowWebFactory : WebApplicationFactory<Program>, IAsyncLifetime` exposes `public partial class Program` (with `protected Program() { }`) in `Program.cs` and boots a single `Testcontainers.PostgreSql` instance pinned to multi-arch `imresamu/postgis:17-3.5-alpine` via `WithImage(...)`.
-- **Collection Serialization & Migrations:** An xUnit `[CollectionDefinition("PostgresIntegration")]` shares the container across integration test classes so `MigrateAsync()` executes once per test run without parallel reset races.
-- **Fast Database Reset (`Respawn`):** Each test implements `IAsyncLifetime` (`ValueTask InitializeAsync()` in `xUnit v3`) to reset user tables in milliseconds via `Respawner.ResetAsync`, explicitly excluding `__EFMigrationsHistory`, `spatial_ref_sys`, `geometry_columns`, `geography_columns`, `raster_columns`, and `raster_overviews`.
-- **Deterministic External Isolation & Filtering:** Integration tests override external NASA HTTP calls with deterministic fixtures / fake handler so tests never depend on live external APIs, and mark integration classes with `[Trait("Category", "Integration")]` to allow fast offline filtering (`--filter "Category!=Integration"`).
-
----
-
-## 11. Scope Traceability & Ownership
-
-### 11.1 Mapping Scope Items ([docs/scope.md](file:///Users/spnch/documents/code/hackathons/NASA-2026/FarmFlow_Nasa/docs/scope.md)) to Backend Slices
+### 10.1 Mapping Scope Items ([docs/scope.md](file:///Users/spnch/documents/code/hackathons/NASA-2026/FarmFlow_Nasa/docs/scope.md)) to Backend Slices
 
 | Scope ID | Tier | Feature | Implementing Backend Slice / Component | Owner |
 | :--- | :--- | :--- | :--- | :--- |
-| **P0-1** | 🟢 P0 | Interactive Field Catalog & GeoJSON Creation | `Features/Fields/CreateField.cs`, `GetFields.cs`, `Infrastructure/Spatial/GeoCalculator.cs` | `spnch` |
-| **P0-2** | 🟢 P0 | Pre-Seeded Demo Fields (4 Scenarios) | `Infrastructure/Database/DbSeeder.cs` | `spnch` |
+| **P0-1** | 🟢 P0 | Interactive Field Catalog & GeoJSON Creation | `Features/Fields/CreateField.cs`, `GetFields.cs`, `Infrastructure/Spatial/GeoCalculator.cs` | `ghost` + `spnch` (GIS) |
+| **P0-2** | 🟢 P0 | Pre-Seeded Demo Fields (4 Scenarios) | `Infrastructure/Database/DbSeeder.cs` | `ghost` |
 | **P0-3** | 🟢 P0 | 14–30 Day Environmental Time-Series | `Infrastructure/Nasa/NasaPowerClient.cs`, `Features/AgroAnalytics/GetFieldDashboard.cs` | `spnch` |
 | **P0-4** | 🟢 P0 | Resilient Mock Fallback & `-999` Sanitizer | `Infrastructure/Nasa/ResilientNasaClient.cs`, `MockNasaClient.cs` | `spnch` |
 | **P0-5** | 🟢 P0 | F1: Smart Irrigation Calculator ($\text{mm}$) | `Features/AgroAnalytics/GetEarlyStressAlert.cs`, `AgroFormulas.cs` | `spnch` |
@@ -310,14 +289,13 @@ public static class GetWorkabilityWindow
 | **P1-1** | 🔵 P1 | 7-Day Soil Moisture & ESI Forecaster (LSTM/CNN) | `backend/ml/train_soil_forecast.py` $\rightarrow$ `Features/Predictions/ForecastSoilMoisture.cs` | `spnch` |
 | **P1-2** | 🔵 P1 | 72-Hour Proactive Stress Alert | `Features/Predictions/ForecastSoilMoisture.cs` + `AgroFormulas.CalculateWaterDeficitIndex` | `spnch` |
 | **P1-3** | 🔵 P1 | End-of-Season Yield Predictor (Tabular ML) | `backend/ml/train_yield_model.py` $\rightarrow$ `Features/Predictions/PredictYield.cs` | `spnch` |
-| **P1-4** | 🔵 P1 | Prioritized Daily Alert Feed | `Features/Alerts/GetActiveAlerts.cs` | `spnch` / `ghost` |
-| **P2-1** | 🟣 P2 | Farmer Alert Feedback Loop | `Features/Alerts/SubmitAlertFeedback.cs`, `Entities/AlertFeedback.cs` | `spnch` / `ghost` |
+| **P1-4** | 🔵 P1 | Prioritized Daily Alert Feed | `Features/Alerts/GetActiveAlerts.cs` | `ghost` |
+| **P2-1** | 🟣 P2 | Farmer Alert Feedback Loop | `Features/Alerts/SubmitAlertFeedback.cs`, `Entities/AlertFeedback.cs` | `ghost` |
 | **P2-2** | 🟣 P2 | Sustainability & ROI Impact Metrics | `Features/AgroAnalytics/GetFieldDashboard.cs` (Water saved & runoff prevented KPIs) | `spnch` |
 
-### 11.2 Vertical Slice Modules & Test Ownership
+### 10.2 Developer Ownership Boundaries (Zero Merge Conflicts)
 
-| Area | Primary Components | Directories |
+| Developer | Ownership Area | Directories |
 | :--- | :--- | :--- |
-| **Core Backend MVP** | PostGIS Database & Seeding, Field CRUD, Spatial Engine, NASA Pipeline, Deterministic Agro Formulas | `Infrastructure/Database/`, `Infrastructure/Spatial/`, `Infrastructure/Nasa/`, `Features/Fields/`, `Features/AgroAnalytics/`, `Features/Alerts/` |
-| **AI/ML & Forecasting** | Python ML/DL Training & `.onnx` Inference | `Infrastructure/Ml/`, `Features/Predictions/`, `backend/ml/` |
-| **Automated Verification** | Unit Tests + PostGIS Testcontainers Integration Tests | `tests/FarmFlow.Api.Tests/` |
+| **`spnch`** | Spatial Engine, NASA Pipeline, Deterministic Agro Formulas, Python ML/DL Training & ONNX Inference | `Infrastructure/Spatial/`, `Infrastructure/Nasa/`, `Infrastructure/Ml/`, `Features/AgroAnalytics/`, `Features/Predictions/`, `backend/ml/` |
+| **`ghost`** | Database Migrations & Seeding, Field CRUD Slice, Prioritized Alerts Feed, Farmer Feedback Loop | `Infrastructure/Database/`, `Features/Fields/`, `Features/Alerts/` |
