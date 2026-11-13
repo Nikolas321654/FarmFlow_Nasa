@@ -153,12 +153,30 @@ vite.config.ts.timestamp-*
 .DS_Store
 Thumbs.db
 desktop.ini
+Library/
+
+# .NET / C#
+[Bb]in/
+[Bb]in\\*/
+[Oo]bj/
+.nuget/
+.local/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
 
 # AI agents
 AGENTS.local.md
 CLAUDE.local.md
+GEMINI.local.md
 .claude/settings.local.json
+
+# my personal stuff - (c) spnchdev
+.agents/mcp_config.json
+.docs.local/
 
 # Tests
 playwright-report/
 test-results/
+TestResults/
