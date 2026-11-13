@@ -17,9 +17,8 @@ understand what to do next.
 
 ## 2. Target Users & Problems
 
-- **Guests** explore the four public demo fields without signing in.
-- **Farmers and farm managers** monitor public demo fields and their private fields;
-  they need clear priorities, timing, and quantities for daily decisions.
+- **Farmers and farm managers** monitor several fields and need clear priorities,
+  timing, and quantities for daily decisions.
 - **Agronomists and advisors** investigate field health and need trends, underlying
   measurements, field context, and uncertainty.
 
@@ -31,32 +30,24 @@ and crop-health changes in time.
 
 ### Monitor and select fields
 
-1. Open the workspace without signing in and explore the public demo fields.
-2. After Google sign-in, also see your own private fields; other users' fields stay hidden.
-3. Compare visible fields in a catalog and on a map with field boundaries.
+1. Open the workspace without signing in.
+2. Compare fields in a catalog and on a map with field boundaries.
    Each field shows its name, crop, area, and current indications.
-4. Select a field from either view; the map and catalog stay synchronized.
-5. Open its details to see the leading recommendation and supporting analysis.
+3. Select a field from either view; the map and catalog stay synchronized.
+4. Open its details to see the leading recommendation and supporting analysis.
 
 The four seeded Ukrainian fields should be distinguishable without requiring users
 to know agricultural abbreviations.
 
 ### Add a field
 
-1. Choose **Add field**. If signed out, continue with Google and return to the workspace.
-2. Draw a polygon or upload GeoJSON.
-3. Enter a name, crop, and planting date; review the boundary and calculated area
+1. Choose **Add field**, then draw a polygon or upload GeoJSON.
+2. Enter a name, crop, and planting date; review the boundary and calculated area
    and centroid before saving.
-4. After a successful save, find the private field in both the catalog and map.
+3. After a successful save, find the field in both the catalog and map.
 
 Explain invalid or unsupported geometry in plain language. Never show a successful
 save when persistence failed.
-
-### Manage a profile and private fields
-
-A signed-in farmer can edit a custom display name without changing their Google
-email or avatar. Their name and private fields remain after signing out and back in.
-They may delete their own fields, but not shared demo fields.
 
 ### Understand a field and decide what to do
 
@@ -75,8 +66,6 @@ Use meaningful labels and units. Explain a `Blocked` status.
 - **Fields Overview / Map:** Compare fields and select one for details.
 - **Field Details / Dashboard:** Show the action, reasons, trends, and data provenance.
 - **Create Field:** Draw or import a boundary, review field details, and save.
-- **Profile:** Show the signed-in name, email, and avatar; allow display-name editing
-  and sign-out.
 - **Action Center and Predictions:** If approved in [scope.md](scope.md), show
   prioritized alerts and clearly labeled forecasts or estimates.
 
@@ -119,8 +108,6 @@ Use consistent readings across each scenario. Label fixtures as demo data.
   Show the source and observation date where known; never present a fixture as live.
 - If data or a capability is unavailable, say so. Do not invent measurements,
   forecasts, confidence scores, or savings.
-- Guests can see only public demo fields. Private fields belong to the signed-in
-  farmer and must not appear to other users.
 - A vegetation anomaly calls for field scouting. Do not present it as a diagnosis,
   guarantee spraying safety, or promise a yield outcome.
 - Recommendations should remain conditional on local practice and field checks.
