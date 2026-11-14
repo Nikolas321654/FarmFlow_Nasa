@@ -1,3 +1,3 @@
 export { ApiError } from './ApiError';
 export type { ApiErrorKind, ApiProblemDetails } from './ApiError';
-export { apiRequest } from './client';
+export { apiRequest, apiUrl } from './client';

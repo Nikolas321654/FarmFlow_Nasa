@@ -1,31 +1,17 @@
-import { faMap, faPlus, faRightToBracket, faUser } from '@fortawesome/free-solid-svg-icons';
+import { faMap, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { ReactNode } from 'react';
 import { Link, NavLink, Outlet, useMatch } from 'react-router-dom';
-import { BrandLogo, Button } from '@/shared/ui';
-
-type ShellAccount = {
-  displayName: string;
-  avatarUrl?: string | null;
-};
+import { BrandLogo } from '@/shared/ui';
+import { AccountFooter } from './AccountFooter';
 
 type AppShellProps = {
   children?: ReactNode;
-  account?: ShellAccount | null;
-  onSignIn?: () => void;
-  onAccountMenu?: () => void;
   panelTitle?: string;
   panelContent?: ReactNode;
 };
 
-export function AppShell({
-  children,
-  account,
-  onSignIn,
-  onAccountMenu,
-  panelTitle,
-  panelContent,
-}: AppShellProps) {
+export function AppShell({ children, panelTitle, panelContent }: AppShellProps) {
   const isAddField = useMatch('/fields/new');
   const isFieldInsights = useMatch('/fields/:id');
   const currentPanelTitle =
@@ -90,33 +76,7 @@ export function AppShell({
           aria-label="Account"
           className="order-2 mt-5 shrink-0 border-t border-border pt-4 md:order-3 md:mt-4"
         >
-          {account ? (
-            <Button
-              variant="secondary"
-              onClick={onAccountMenu}
-              disabled={!onAccountMenu}
-              aria-label={`Open account menu for ${account.displayName}`}
-              className="w-full justify-start rounded-control px-3"
-            >
-              {account.avatarUrl ? (
-                <img src={account.avatarUrl} alt="" className="h-7 w-7 rounded-full object-cover" />
-              ) : (
-                <FontAwesomeIcon icon={faUser} aria-hidden="true" />
-              )}
-              <span className="truncate">{account.displayName}</span>
-            </Button>
-          ) : (
-            <Button
-              variant="secondary"
-              onClick={onSignIn}
-              disabled={!onSignIn}
-              aria-label="Sign in with Google"
-              className="w-full justify-start border-border bg-surface px-3 text-text-primary disabled:cursor-default! disabled:opacity-100!"
-            >
-              <FontAwesomeIcon icon={faRightToBracket} aria-hidden="true" />
-              <span>Sign in</span>
-            </Button>
-          )}
+          <AccountFooter />
         </footer>
       </aside>
 

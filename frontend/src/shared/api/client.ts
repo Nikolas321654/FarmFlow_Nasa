@@ -12,7 +12,7 @@ type CsrfTokenResponse = {
 
 const stateChangingMethods = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
-function apiUrl(path: string): string {
+export function apiUrl(path: string): string {
   return `${env.apiBaseUrl.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
 }
 

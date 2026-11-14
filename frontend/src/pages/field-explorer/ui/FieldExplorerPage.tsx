@@ -57,7 +57,6 @@ export function FieldExplorerPage() {
 
   return (
     <AppShell
-      account={userQuery.data?.authenticated ? userQuery.data.user : undefined}
       panelContent={
         <FieldSidebar
           fields={fields}
@@ -68,9 +67,6 @@ export function FieldExplorerPage() {
           activeTab={activeTab}
           onTabChange={setChosenTab}
           authenticated={userQuery.data?.authenticated === true}
-          authLoading={userQuery.isPending}
-          authError={userQuery.isError}
-          onRetryAuth={() => void userQuery.refetch()}
           loading={fieldQuery.isPending}
           error={fieldQuery.isError}
           onRetryFields={() => void fieldQuery.refetch()}

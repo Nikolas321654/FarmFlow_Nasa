@@ -12,9 +12,6 @@ type FieldSidebarProps = {
   activeTab: 'demo' | 'mine';
   onTabChange: (tab: 'demo' | 'mine') => void;
   authenticated: boolean;
-  authLoading: boolean;
-  authError: boolean;
-  onRetryAuth: () => void;
   loading: boolean;
   error: boolean;
   onRetryFields: () => void;
@@ -29,9 +26,6 @@ export function FieldSidebar({
   activeTab,
   onTabChange,
   authenticated,
-  authLoading,
-  authError,
-  onRetryAuth,
   loading,
   error,
   onRetryFields,
@@ -42,19 +36,6 @@ export function FieldSidebar({
 
   return (
     <div className="mt-2 min-w-0">
-      {authLoading && (
-        <p role="status" className="text-ui-xs text-text-secondary">
-          Checking account…
-        </p>
-      )}
-      {authError && (
-        <div role="alert" className="text-ui-xs text-text-secondary">
-          <p>Unable to check your session.</p>
-          <Button variant="secondary" onClick={onRetryAuth} className="mt-2">
-            Retry account
-          </Button>
-        </div>
-      )}
       {authenticated && (
         <div
           role="tablist"
@@ -85,7 +66,7 @@ export function FieldSidebar({
           ))}
         </div>
       )}
-      {!authenticated && !authLoading && <p className="mb-3 type-label">Demo Fields</p>}
+      {!authenticated && <p className="mb-3 type-label">Demo Fields</p>}
       <div
         id={authenticated ? 'field-group-panel' : undefined}
         role={authenticated ? 'tabpanel' : undefined}
