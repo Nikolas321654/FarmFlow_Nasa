@@ -1,5 +1,4 @@
-import { faArrowRight } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { FcGoogle } from 'react-icons/fc';
 import { ApiError } from '@/shared/api';
 import { Button, Dialog } from '@/shared/ui';
 import { useGoogleSignIn } from '../model/useGoogleSignIn';
@@ -32,22 +31,20 @@ export function SignInDialog({ returnTo, reason, onClose }: SignInDialogProps) {
       size="sm"
       title="Sign in to Rivnova"
       description={reason ?? 'Sign in with Google to save and manage your own fields.'}
-      footer={
-        <>
-          <Button variant="secondary" onClick={onClose} disabled={redirecting}>
-            Cancel
-          </Button>
-          <Button onClick={() => signIn.mutate(returnTo)} loading={redirecting}>
-            {redirecting ? 'Opening Google…' : 'Continue with Google'}
-            {!redirecting && <FontAwesomeIcon icon={faArrowRight} aria-hidden="true" />}
-          </Button>
-        </>
-      }
     >
       <p className="text-ui-sm text-text-secondary">
         You will be redirected to Google and brought back here afterwards. Demo fields stay
         available without an account.
       </p>
+      <Button
+        variant="secondary"
+        onClick={() => signIn.mutate(returnTo)}
+        loading={redirecting}
+        className="mt-5 min-h-12 w-full gap-3 rounded-full px-6 text-ui-base font-medium! shadow-sm"
+      >
+        {!redirecting && <FcGoogle aria-hidden="true" className="size-5 shrink-0" />}
+        {redirecting ? 'Opening Google…' : 'Continue with Google'}
+      </Button>
       {signIn.isError && (
         <p role="alert" className="mt-3 text-ui-sm text-status-danger">
           {signInErrorMessage(signIn.error)}
