@@ -28,6 +28,9 @@
     <Content Update="Infrastructure/Nasa/Fixtures/*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Infrastructure/Ml/Models/*.onnx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

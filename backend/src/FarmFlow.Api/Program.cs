@@ -1,11 +1,14 @@
 using System.Text.Json.Serialization;
 using FarmFlow.Api.Features.AgroAnalytics;
+using FarmFlow.Api.Features.Alerts;
 using FarmFlow.Api.Features.Auth;
 using FarmFlow.Api.Features.Fields;
+using FarmFlow.Api.Features.Predictions;
 using FarmFlow.Api.Features.System;
 using FarmFlow.Api.Features.Users;
 using FarmFlow.Api.Infrastructure.Auth;
 using FarmFlow.Api.Infrastructure.Database;
+using FarmFlow.Api.Infrastructure.Ml;
 using FarmFlow.Api.Infrastructure.Nasa;
 using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.IO.Converters;
@@ -64,6 +67,9 @@ builder.Services.AddSingleton<INasaFixtureStore, FileNasaFixtureStore>();
 builder.Services.AddSingleton<MockNasaClient>();
 builder.Services.AddScoped<INasaClient, ResilientNasaClient>();
 
+// In-process ONNX ML/DL Inference Registry
+builder.Services.AddSingleton<OnnxModelRegistry>();
+
 var app = builder.Build();
 
 app.UseForwardedHeaders();
@@ -90,6 +96,8 @@ app.MapAuthEndpoints();
 app.MapUsersEndpoints();
 app.MapFieldsEndpoints();
 app.MapAgroAnalyticsEndpoints();
+app.MapPredictionsEndpoints();
+app.MapAlertsEndpoints();
 
 await app.RunAsync();
 
