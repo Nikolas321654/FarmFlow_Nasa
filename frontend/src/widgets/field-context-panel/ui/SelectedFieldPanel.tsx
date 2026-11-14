@@ -118,7 +118,7 @@ export function SelectedFieldPanel({ field, onBack }: SelectedFieldPanelProps) {
               {otherActions.length > 0 && (
                 <ul className="mt-1 divide-y divide-border">
                   {otherActions.map((action) => (
-                    <li key={action.id}>
+                    <li key={action.id} className="py-1">
                       <ActionRow action={action} />
                     </li>
                   ))}

@@ -17,6 +17,17 @@ type OverviewPanelProps = {
 };
 
 const areaFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 });
+const largeAreaFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
+const compactAreaFormatter = new Intl.NumberFormat('en-US', {
+  notation: 'compact',
+  maximumFractionDigits: 1,
+});
+
+function formatArea(hectares: number): string {
+  if (hectares >= 100_000) return compactAreaFormatter.format(hectares);
+  if (hectares >= 1_000) return largeAreaFormatter.format(hectares);
+  return areaFormatter.format(hectares);
+}
 const volumeFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
 
 export function OverviewPanel({ fields, loading, error, onSelectField }: OverviewPanelProps) {
@@ -39,14 +50,15 @@ export function OverviewPanel({ fields, loading, error, onSelectField }: Overvie
       <div className="relative shrink-0 overflow-hidden border-b border-border px-5 pb-4 pt-5">
         <ParcelMotif />
         <div className="relative max-w-[80%]">
-          <h2 className="type-panel-title">Current conditions</h2>
+          <h2 className="type-page-title">Current conditions</h2>
         </div>
         <dl className="relative mt-4 grid grid-cols-2 gap-2">
           <StatTile label="Fields" value={unavailable ?? String(fields.length)} />
           <StatTile
             label="Total area"
-            value={unavailable ?? areaFormatter.format(totalArea)}
+            value={unavailable ?? formatArea(totalArea)}
             unit={unavailable ? undefined : 'ha'}
+            fullValue={unavailable ? undefined : `${areaFormatter.format(totalArea)} ha`}
           />
           <StatTile
             label="Blocked"
@@ -94,7 +106,7 @@ export function OverviewPanel({ fields, loading, error, onSelectField }: Overvie
           {actions.length > 0 && (
             <ul className="mt-1 divide-y divide-border">
               {actions.map((action) => (
-                <li key={action.id}>
+                <li key={action.id} className="py-1">
                   <ActionRow action={action} onSelect={onSelectField} />
                 </li>
               ))}

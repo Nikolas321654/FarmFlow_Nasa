@@ -31,14 +31,14 @@ export function ActionRow({ action, onSelect }: ActionRowProps) {
     </>
   );
 
-  if (!onSelect) return <div className="flex items-start gap-3 py-2.5">{content}</div>;
+  if (!onSelect) return <div className="flex items-start gap-3 py-1.5">{content}</div>;
 
   return (
     <button
       type="button"
       onClick={() => onSelect(action.fieldId)}
       title={action.recommendation}
-      className="group flex w-full items-start gap-3 rounded-control px-1 py-2.5 text-left hover:bg-selection focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      className="group -mx-2 flex w-[calc(100%+1rem)] items-start gap-3 rounded-control px-2 py-1.5 text-left transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
     >
       {content}
       <FontAwesomeIcon
