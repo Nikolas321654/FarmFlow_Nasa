@@ -1,8 +1,14 @@
-import { faCircleCheck, faDrawPolygon, faFileLines } from '@fortawesome/free-solid-svg-icons';
+import {
+  faCircleCheck,
+  faDrawPolygon,
+  faFileLines,
+  faTriangleExclamation,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useId, type FormEvent, type ReactNode } from 'react';
 import { estimatePolygonAreaHectares } from '@/shared/lib/polygon';
-import { Button, MetaList, SelectField, TextField } from '@/shared/ui';
+import { Button, SelectField, TextField } from '@/shared/ui';
+import { formatHectares } from '../model/boundaryRules';
 import {
   cropTypes,
   fieldNameMaxLength,
@@ -24,14 +30,6 @@ type FieldDraftFormProps = {
   boundaryActions?: ReactNode;
   footer?: ReactNode;
 };
-
-const areaFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 });
-const dateFormatter = new Intl.DateTimeFormat('en-US', {
-  day: 'numeric',
-  month: 'short',
-  year: 'numeric',
-  timeZone: 'UTC',
-});
 
 function boundaryStatus(draft: FieldDraft): string {
   if (!draft.boundary) return 'No boundary yet';
@@ -59,7 +57,7 @@ export function FieldDraftForm({
   const dateId = useId();
   const boundaryTitleId = useId();
   const area = draft.boundary ? estimatePolygonAreaHectares(draft.boundary) : null;
-  const plantedLabel = draft.plantedAt ? dateFormatter.format(Date.parse(draft.plantedAt)) : null;
+  const boundaryInvalid = Boolean(draft.boundary && errors.boundary);
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -77,28 +75,37 @@ export function FieldDraftForm({
             Boundary
           </h3>
           <div
-            className={`flex items-start gap-3 rounded-control px-3 py-2.5 ${draft.boundary ? 'bg-status-success-bg' : 'bg-surface-muted'}`}
+            className={`flex items-start gap-3 rounded-control px-3 py-2.5 ${boundaryInvalid ? 'bg-status-danger-bg' : draft.boundary ? 'bg-status-success-bg' : 'bg-surface-muted'}`}
           >
             <FontAwesomeIcon
               icon={
-                !draft.boundary
-                  ? faDrawPolygon
-                  : draft.boundarySource?.kind === 'imported'
-                    ? faFileLines
-                    : faCircleCheck
+                boundaryInvalid
+                  ? faTriangleExclamation
+                  : !draft.boundary
+                    ? faDrawPolygon
+                    : draft.boundarySource?.kind === 'imported'
+                      ? faFileLines
+                      : faCircleCheck
               }
-              className={`mt-0.5 ${draft.boundary ? 'text-status-success' : 'text-text-secondary'}`}
+              className={`mt-0.5 ${boundaryInvalid ? 'text-status-danger' : draft.boundary ? 'text-status-success' : 'text-text-secondary'}`}
               aria-hidden="true"
             />
             <div className="min-w-0">
               <p className="break-words type-item-title">{boundaryStatus(draft)}</p>
-              <p className="type-label">
-                {area !== null
-                  ? `About ${areaFormatter.format(area)} ha (estimate, final area is calculated on save)`
-                  : 'Use Draw boundary on the map, or import a file.'}
-              </p>
+              {area === null && (
+                <p className="type-label">Use Draw boundary on the map, or import a file.</p>
+              )}
             </div>
           </div>
+          {area !== null && (
+            <dl className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+              <dt className="type-label">Estimated area</dt>
+              <dd className="type-value text-ui-sm">{formatHectares(area)}</dd>
+              <dd className="w-full type-label">
+                The final area is calculated when the field is saved.
+              </dd>
+            </dl>
+          )}
           {errors.boundary && (
             <p role="alert" className="text-ui-sm text-status-danger">
               {errors.boundary}
@@ -151,16 +158,6 @@ export function FieldDraftForm({
       </div>
 
       <div className="grid shrink-0 gap-3 border-t border-border px-5 py-4">
-        {(draft.name.trim() || draft.cropType || plantedLabel || area !== null) && (
-          <MetaList className="text-ui-xs text-text-secondary tabular-nums">
-            {draft.name.trim() && (
-              <span className="break-all font-medium text-text-primary">{draft.name.trim()}</span>
-            )}
-            {draft.cropType || null}
-            {plantedLabel && `Planted ${plantedLabel}`}
-            {area !== null && `About ${areaFormatter.format(area)} ha`}
-          </MetaList>
-        )}
         {submitError && (
           <p role="alert" className="text-ui-sm text-status-danger">
             {submitError}

@@ -38,7 +38,9 @@ export function useAddFieldDraft() {
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
 
   const dirty = isFieldDraftDirty(draft);
+  const boundaryError = draft.boundary ? validateFieldDraft(draft).boundary : undefined;
   const errors: FieldDraftErrors = {
+    ...(boundaryError ? { boundary: boundaryError } : {}),
     ...(showValidation ? validateFieldDraft(draft) : {}),
     ...serverErrors,
     ...(mapError ? { boundary: mapError } : {}),
