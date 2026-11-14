@@ -40,7 +40,7 @@ export function SignInDialog({ returnTo, reason, onClose }: SignInDialogProps) {
         variant="secondary"
         onClick={() => signIn.mutate(returnTo)}
         loading={redirecting}
-        className="mt-5 min-h-12 w-full gap-3 rounded-full px-6 text-ui-base font-medium! shadow-sm"
+        className="mt-5 min-h-12 w-full gap-3 rounded-full px-6 text-ui-base font-medium! shadow-sm enabled:hover:border-primary! enabled:hover:bg-selection!"
       >
         {!redirecting && <FcGoogle aria-hidden="true" className="size-5 shrink-0" />}
         {redirecting ? 'Opening Google…' : 'Continue with Google'}
