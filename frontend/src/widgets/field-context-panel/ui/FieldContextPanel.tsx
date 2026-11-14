@@ -12,7 +12,6 @@ type FieldContextPanelProps = {
   error: boolean;
   onSelectField: (id: string | null) => void;
   onCollapse: () => void;
-  /** Moves focus to the collapse button on mount, e.g. after "Show details". */
   focusOnMount?: boolean;
 };
 
@@ -41,7 +40,6 @@ export function FieldContextPanel({
         title="Hide details panel"
         className="absolute right-2 top-2 z-10 grid size-11 place-items-center rounded-control text-ui-xs text-text-secondary hover:bg-surface-muted hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:size-8"
       >
-        {/* The panel sits beside the map on wide screens and below it otherwise. */}
         <span className="min-[1260px]:hidden" aria-hidden="true">
           <FontAwesomeIcon icon={faAnglesDown} />
         </span>

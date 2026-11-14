@@ -68,11 +68,6 @@ body {
   font-weight: 400;
 }
 
-/*
- * Type roles (frontend/docs/design.md, Typography). Body text is regular
- * text-ui-sm; metadata is regular text-ui-xs in text-secondary. Righteous is
- * reserved for page titles. Labels are sentence case.
- */
 @utility type-page-title {
   font-family: var(--font-display);
   font-weight: 400;
@@ -81,7 +76,6 @@ body {
   color: var(--color-navy);
 }
 
-/* Panel heading, e.g. "Current conditions". */
 @utility type-panel-title {
   font-size: var(--text-ui-lg);
   line-height: var(--text-ui-lg--line-height);
@@ -89,7 +83,6 @@ body {
   color: var(--color-navy);
 }
 
-/* Section heading inside a panel, e.g. "Today's actions". */
 @utility type-section-title {
   font-size: var(--text-ui-sm);
   line-height: var(--text-ui-sm--line-height);
@@ -97,7 +90,6 @@ body {
   color: var(--color-text-primary);
 }
 
-/* Field names and list item titles. */
 @utility type-item-title {
   font-size: var(--text-ui-sm);
   line-height: var(--text-ui-sm--line-height);
@@ -105,7 +97,6 @@ body {
   color: var(--color-text-primary);
 }
 
-/* Small muted label for data and context, e.g. "Total area". */
 @utility type-label {
   font-size: var(--text-ui-xs);
   line-height: var(--text-ui-xs--line-height);

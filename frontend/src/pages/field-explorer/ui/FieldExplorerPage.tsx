@@ -22,7 +22,6 @@ export function FieldExplorerPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [hoveredFieldId, setHoveredFieldId] = useState<string | null>(null);
   const [chosenTab, setChosenTab] = useState<'demo' | 'mine' | null>(null);
-  // Panel visibility is UI state, independent of the selected field in the URL.
   const [panelOpen, setPanelOpen] = useState(true);
   const [focusPanelOnOpen, setFocusPanelOnOpen] = useState(false);
 
@@ -31,7 +30,6 @@ export function FieldExplorerPage() {
     fields.find((field) => field.id === selectedFieldId && polygonPositions(field.boundary)) ??
     null;
   const validSelectedFieldId = selectedField?.id ?? null;
-  // Until the user picks a tab, follow the group of the field opened from the URL.
   const activeTab = chosenTab ?? (selectedField && !selectedField.isDemo ? 'mine' : 'demo');
 
   const selectField = (id: string | null) => {
@@ -46,7 +44,6 @@ export function FieldExplorerPage() {
     );
     const field = id ? fields.find((item) => item.id === id) : undefined;
     if (field) setChosenTab(field.isDemo ? 'demo' : 'mine');
-    // Only an explicit field selection opens the panel; clearing it keeps the current state.
     if (id) {
       setFocusPanelOnOpen(false);
       setPanelOpen(true);
@@ -106,7 +103,6 @@ export function FieldExplorerPage() {
               )}
             </div>
             <div
-              // Collapsed below the wide layout, the map takes the panel's space instead of leaving a gap.
               className={`h-[52dvh] min-h-80 min-w-0 min-[1260px]:h-auto min-[1260px]:min-h-0 min-[1260px]:flex-1 ${panelOpen ? '' : 'md:h-auto md:flex-1'}`}
             >
               <FieldMap

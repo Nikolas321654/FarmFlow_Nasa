@@ -21,7 +21,6 @@ type FieldMapProps = {
   onHoverField: (id: string | null) => void;
   loading?: boolean;
   error?: boolean;
-  /** Extra controls shown in the top-right control row, e.g. a panel toggle. */
   controls?: ReactNode;
 };
 

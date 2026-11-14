@@ -5,7 +5,6 @@ type MetaListProps = {
   className?: string;
 };
 
-/** Inline metadata items separated by a small drawn dot. */
 export function MetaList({ children, className = '' }: MetaListProps) {
   const items = Children.toArray(children);
 

@@ -11,12 +11,10 @@ function fieldNameParts(name: string): FieldNameParts {
   return { code: match[1], label: match[2] };
 }
 
-/** Short name for action copy, e.g. "Central Wheat". */
 export function fieldShortName(name: string): string {
   return fieldNameParts(name).label;
 }
 
-/** Removes the "<field name>: " prefix the backend adds to recommendation text. */
 export function withoutFieldPrefix(text: string, name: string): string {
   const { code } = fieldNameParts(name);
   for (const prefix of [name, code].filter((value): value is string => Boolean(value))) {

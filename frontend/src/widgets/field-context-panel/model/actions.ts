@@ -20,7 +20,6 @@ export type FieldAction = {
 
 const severityRank: Record<AlertSeverity, number> = { Critical: 0, Warning: 1, Info: 2 };
 const kindRank: Record<FieldActionKind, number> = { irrigate: 0, spray: 1, machinery: 2, scout: 3 };
-// Mirrors the backend spraying rule: forecast_24h >= 5 mm blocks spraying (P0-6).
 const sprayForecastLimitMm = 5;
 
 const mm = new Intl.NumberFormat('en-US', { maximumFractionDigits: 1 });
@@ -29,7 +28,6 @@ function serverText(text: string, fieldName: string): string {
   return withoutLongDashes(withoutFieldPrefix(text, fieldName));
 }
 
-/** Turns one field's dashboard evaluations into task rows. */
 export function buildFieldActions(dashboard: FieldDashboard): FieldAction[] {
   const { fieldId, fieldName, stressAndIrrigation, workability, biomass } = dashboard;
   const name = fieldShortName(fieldName);
@@ -82,7 +80,6 @@ export function buildFieldActions(dashboard: FieldDashboard): FieldAction[] {
       kind: 'scout',
       severity: 'Warning',
       title: `Scout ${name}`,
-      // The backend only flags an anomaly when rootzone moisture is healthy.
       detail: `NDVI down ${Math.round(Math.abs(biomass.deltaPercent))}%, soil moisture OK`,
       recommendation: serverText(biomass.recommendation, fieldName),
     });

@@ -9,7 +9,6 @@ export function useLogout() {
     mutationFn: signOut,
     onSuccess: async () => {
       await queryClient.cancelQueries({ queryKey: fieldQueryKeys.all });
-      // Clear active observers without refetching private field details after logout.
       queryClient
         .getQueryCache()
         .findAll({ queryKey: fieldQueryKeys.all })
