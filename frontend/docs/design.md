@@ -27,16 +27,18 @@ Avoid generic SaaS dashboards, excessive gradients, decorative illustrations, he
 
 ## Color System
 
-The Rivnova interface uses a natural, muted palette based on the approved agricultural field-mapping prototype.
+The Rivnova interface uses a restrained palette aligned with the original logo SVG. Navy, indigo, green, and yellow are brand colors; cream and light surfaces create the main visual hierarchy. Use indigo and yellow only as small accents where they add meaning.
 
 ### Core Palette
 
 | Token | HEX | Usage |
 |---|---|---|
-| `forest` | `#162A1F` | Dark navigation panels, sidebar, strong visual anchors |
+| `navy` | `#183152` | Needs attention section and strong informational contrast |
 | `primary` | `#24543A` | Primary buttons, active navigation, selected controls |
 | `primary-hover` | `#173A2A` | Hover state for primary actions |
-| `sage` | `#788868` | Secondary buttons, supporting elements, muted green surfaces |
+| `selection` | `#DCE8D8` | Subtle selected card, tab, and navigation backgrounds |
+| `indigo` | `#29337D` | Occasional secondary accent |
+| `brand-yellow` | `#ECE65A` | Very small brand accents; never a large background |
 | `background` | `#F6F1EA` | Main page background and header |
 | `surface` | `#FCF9F5` | Cards, menus, elevated surfaces |
 | `surface-muted` | `#F3EDE6` | Form panels, secondary containers |
@@ -44,10 +46,8 @@ The Rivnova interface uses a natural, muted palette based on the approved agricu
 | `text-primary` | `#101D17` | Headings and primary text |
 | `text-secondary` | `#626960` | Descriptions, metadata, helper text |
 | `border` | `#CCC6BC` | Form borders, separators, card outlines |
-| `terracotta` | `#A47854` | Decorative accents, illustrations, secondary highlights |
-| `terracotta-action` | `#9A5536` | Accent-colored interactive buttons with white text |
 
-The core background, forest green, sage and terracotta colors are based on the visual prototype. Additional interaction and surface tokens are defined to maintain consistency and accessibility.
+The remaining text, border, and neutral surface tokens support readability and separation. Status colors below are reserved for actual field conditions and validation feedback.
 
 ### Semantic Colors
 
@@ -65,14 +65,14 @@ Never communicate status by color alone. Always include a meaningful label or Fo
 ### Color Usage Rules
 
 - Use warm cream as the default page background, not pure white.
-- Use Forest Green for dark navigation surfaces and large visual anchors.
-- Use Primary Green for important active actions.
-- Use Sage Green for supporting elements and low-emphasis surfaces.
-- Use Terracotta sparingly for emphasis and illustration accents.
-- Use primary text on light surfaces and white text on dark green surfaces.
+- Use Primary Green for important actions and navigation.
+- Use the pale green selection background for selected fields and active navigation.
+- Reserve Navy for the Needs attention section and strong informational contrast.
+- Use Indigo only for occasional secondary accents and yellow only for small brand details.
+- Use primary text on light surfaces and white text on dark primary surfaces.
 - Use semantic colors consistently; do not introduce new status colors for individual screens.
-- Avoid neon greens, highly saturated gradients and arbitrary brand colors.
-- Do not use Sage Green with white text for small buttons without checking contrast.
+- Do not use terracotta, decorative orange, gradients, or arbitrary brand colors.
+- Keep semantic warning and danger colors for real statuses and errors, not decoration.
 - Disabled controls must be visibly inactive and functionally disabled.
 - Preserve the original logo colors and proportions; do not recolor the asset to match the interface.
 

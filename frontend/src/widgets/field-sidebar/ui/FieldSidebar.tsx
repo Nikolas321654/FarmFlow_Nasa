@@ -74,7 +74,7 @@ export function FieldSidebar({
                 onTabChange(nextTab);
                 document.getElementById(`${nextTab}-fields-tab`)?.focus();
               }}
-              className={`min-h-11 min-w-0 flex-1 rounded-control px-2 text-ui-sm font-semibold focus-visible:outline-2 focus-visible:outline-primary ${activeTab === tab ? 'bg-surface text-primary' : 'text-text-secondary hover:text-text-primary'}`}
+              className={`min-h-11 min-w-0 flex-1 rounded-control px-2 text-ui-sm font-semibold focus-visible:outline-2 focus-visible:outline-primary ${activeTab === tab ? 'bg-selection text-primary' : 'text-text-secondary hover:text-text-primary'}`}
             >
               {tab === 'demo' ? 'Demo Fields' : 'My Fields'}
             </button>

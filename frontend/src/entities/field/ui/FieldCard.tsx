@@ -24,7 +24,7 @@ export function FieldCard({ field, selected, selectable, onSelect }: FieldCardPr
   return (
     <Card
       ref={card}
-      tone={selected ? 'muted' : 'default'}
+      tone={selected ? 'selected' : 'default'}
       className={`min-w-0 !rounded-control !p-3 transition-colors ${selected ? '!border-primary ring-1 ring-primary' : ''}`}
     >
       <button

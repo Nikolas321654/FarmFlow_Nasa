@@ -86,7 +86,7 @@ export function Dialog({
           event.clientY > bounds.bottom;
         if (outside) onClose();
       }}
-      className={`m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] overflow-y-auto rounded-card border border-border bg-modal p-0 text-text-primary shadow-xl backdrop:bg-forest/50 focus:outline-none ${sizeClasses[size]}`}
+      className={`m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] overflow-y-auto rounded-card border border-border bg-modal p-0 text-text-primary shadow-xl backdrop:bg-navy/50 focus:outline-none ${sizeClasses[size]}`}
     >
       <div className="flex items-start justify-between gap-4 border-b border-border px-5 py-4 sm:px-6">
         <div className="min-w-0">

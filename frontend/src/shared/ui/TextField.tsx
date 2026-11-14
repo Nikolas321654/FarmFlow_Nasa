@@ -31,7 +31,7 @@ export function TextField({
         aria-describedby={
           [props['aria-describedby'], descriptionId].filter(Boolean).join(' ') || undefined
         }
-        className={`min-h-11 w-full rounded-control border bg-surface px-control-x py-control-y text-ui-base text-text-primary outline-none placeholder:text-text-secondary focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-text-secondary ${error ? 'border-status-danger enabled:hover:border-status-danger' : 'border-border enabled:hover:border-sage'} ${className}`}
+        className={`min-h-11 w-full rounded-control border bg-surface px-control-x py-control-y text-ui-base text-text-primary outline-none placeholder:text-text-secondary focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:bg-surface-muted disabled:text-text-secondary ${error ? 'border-status-danger enabled:hover:border-status-danger' : 'border-border enabled:hover:border-primary'} ${className}`}
       />
       {error ? (
         <p id={descriptionId} className="text-ui-sm text-status-danger">
