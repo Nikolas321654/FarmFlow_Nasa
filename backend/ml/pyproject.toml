@@ -1,0 +1,15 @@
+[project]
+name = "farmflow-ml"
+version = "0.1.0"
+description = "Offline NASA satellite ML/DL training and ONNX export pipeline for FarmFlow."
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=2.0.0",
+    "pandas>=2.2.0",
+    "scikit-learn>=1.6.0",
+    "skl2onnx>=1.18.0",
+    "torch>=2.6.0",
+    "onnx>=1.17.0",
+    "onnxruntime>=1.20.0",
+    "onnxscript>=0.2.0",
+]
