@@ -59,13 +59,13 @@ export function OverviewPanel({
 
   return (
     <>
-      <div className="relative shrink-0 border-b border-border/70 px-5 pb-5 pt-14">
+      <div className="relative shrink-0 border-b border-border/70 px-5 pb-5 pt-5">
         <ParcelMotif />
-        <div>
+        <div className="relative pr-10">
           <h2 className="type-page-title">Current conditions</h2>
           <p className="mt-0.5 type-label">{group === 'mine' ? 'My fields' : 'Demo fields'}</p>
         </div>
-        <dl className="mt-4 grid grid-cols-2 gap-2">
+        <dl className="relative mt-4 grid grid-cols-2 gap-2">
           <StatTile label="Fields" value={unavailable ?? String(fields.length)} />
           <StatTile
             label="Total area"

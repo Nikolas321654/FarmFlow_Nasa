@@ -5,7 +5,7 @@ export function ParcelMotif() {
       focusable="false"
       viewBox="0 0 176 126"
       fill="none"
-      className="pointer-events-none absolute right-14 top-2 h-11 w-16 text-primary/20"
+      className="pointer-events-none absolute right-2 top-2 h-28 w-40 text-primary/15"
     >
       <path
         d="M12 16 56 7l39 16 58-13 17 32-32 34 22 38-54 7-34-31-61 15-9-42 31-21Z"
