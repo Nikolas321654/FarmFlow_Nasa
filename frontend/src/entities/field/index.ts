@@ -10,11 +10,13 @@ export {
   useField,
   useFieldBiomass,
   useFieldDashboard,
+  useFieldDashboards,
   useFields,
   useFieldStress,
   useFieldWorkability,
 } from './api/fieldQueries';
 export { fieldQueryKeys } from './api/queryKeys';
+export { fieldShortName, withoutFieldPrefix } from './lib/fieldName';
 export { FieldCard } from './ui/FieldCard';
 export type {
   AlertSeverity,

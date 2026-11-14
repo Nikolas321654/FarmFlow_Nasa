@@ -1,0 +1,61 @@
+.rivnova-field-marker {
+  background: transparent;
+  border: 0;
+}
+
+.rivnova-field-marker__symbol {
+  position: relative;
+  display: flex;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+  border: 3px solid var(--color-surface);
+  border-radius: 50%;
+  color: white;
+  box-shadow: 0 1px 3px rgb(16 29 23 / 20%);
+  font-size: 15px;
+}
+
+.rivnova-field-marker__alert {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  display: flex;
+  width: 17px;
+  height: 17px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--color-surface);
+  border-radius: 50%;
+  background: var(--color-navy);
+  color: white;
+  font-size: 9px;
+}
+
+.rivnova-field-marker:focus-visible .rivnova-field-marker__symbol {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.rivnova-field-marker--active .rivnova-field-marker__symbol {
+  border-color: var(--color-text-primary);
+  transform: scale(1.16);
+}
+
+.rivnova-field-tooltip {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  background: var(--color-surface);
+  box-shadow: 0 1px 2px rgb(16 29 23 / 12%);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-ui-xs);
+  font-weight: 500;
+  line-height: var(--text-ui-xs--line-height);
+}
+
+.rivnova-field-tooltip.leaflet-tooltip-top::before {
+  border-top-color: var(--color-border);
+}

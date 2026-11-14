@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { queryOptions, useQueries, useQuery } from '@tanstack/react-query';
 import {
   getBiomassTrend,
   getEarlyStressAlert,
@@ -29,12 +29,20 @@ export function useField(id: string | null | undefined) {
   });
 }
 
-export function useFieldDashboard(id: string | null | undefined, days?: number) {
-  return useQuery({
+function fieldDashboardQuery(id: string | null | undefined, days?: number) {
+  return queryOptions({
     queryKey: fieldQueryKeys.dashboard(id ?? '', days),
     queryFn: ({ signal }) => getFieldDashboard(id ?? '', days, signal),
     enabled: isValidFieldId(id),
   });
+}
+
+export function useFieldDashboard(id: string | null | undefined, days?: number) {
+  return useQuery(fieldDashboardQuery(id, days));
+}
+
+export function useFieldDashboards(ids: string[], days?: number) {
+  return useQueries({ queries: ids.map((id) => fieldDashboardQuery(id, days)) });
 }
 
 export function useFieldWorkability(id: string | null | undefined) {

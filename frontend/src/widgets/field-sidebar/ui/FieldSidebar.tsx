@@ -6,7 +6,9 @@ import { Button } from '@/shared/ui';
 type FieldSidebarProps = {
   fields: FieldSummary[];
   selectedFieldId: string | null;
+  hoveredFieldId: string | null;
   onSelectField: (id: string) => void;
+  onHoverField: (id: string | null) => void;
   activeTab: 'demo' | 'mine';
   onTabChange: (tab: 'demo' | 'mine') => void;
   authenticated: boolean;
@@ -21,7 +23,9 @@ type FieldSidebarProps = {
 export function FieldSidebar({
   fields,
   selectedFieldId,
+  hoveredFieldId,
   onSelectField,
+  onHoverField,
   activeTab,
   onTabChange,
   authenticated,
@@ -74,16 +78,14 @@ export function FieldSidebar({
                 onTabChange(nextTab);
                 document.getElementById(`${nextTab}-fields-tab`)?.focus();
               }}
-              className={`min-h-11 min-w-0 flex-1 rounded-control px-2 text-ui-sm font-semibold focus-visible:outline-2 focus-visible:outline-primary ${activeTab === tab ? 'bg-selection text-primary' : 'text-text-secondary hover:text-text-primary'}`}
+              className={`min-h-11 min-w-0 flex-1 rounded-control px-2 text-ui-sm font-medium focus-visible:outline-2 focus-visible:outline-primary ${activeTab === tab ? 'bg-selection text-primary' : 'text-text-secondary hover:text-text-primary'}`}
             >
               {tab === 'demo' ? 'Demo Fields' : 'My Fields'}
             </button>
           ))}
         </div>
       )}
-      {!authenticated && !authLoading && (
-        <p className="mb-3 text-ui-xs font-semibold text-text-secondary">Demo Fields</p>
-      )}
+      {!authenticated && !authLoading && <p className="mb-3 type-label">Demo Fields</p>}
       <div
         id={authenticated ? 'field-group-panel' : undefined}
         role={authenticated ? 'tabpanel' : undefined}
@@ -112,7 +114,7 @@ export function FieldSidebar({
             {authenticated && activeTab === 'mine' && (
               <Link
                 to="/fields/new"
-                className="mt-2 inline-flex min-h-11 items-center font-semibold text-primary underline-offset-2 hover:underline"
+                className="mt-2 inline-flex min-h-11 items-center font-medium text-primary underline-offset-2 hover:underline"
               >
                 Add Field
               </Link>
@@ -126,8 +128,10 @@ export function FieldSidebar({
                 <FieldCard
                   field={field}
                   selected={field.id === selectedFieldId}
+                  hovered={field.id === hoveredFieldId}
                   selectable={polygonPositions(field.boundary) !== null}
                   onSelect={onSelectField}
+                  onHover={onHoverField}
                 />
               </li>
             ))}

@@ -7,6 +7,8 @@ type MapViewportProps = {
   positions: MapPosition[][][];
   selectedPositions: MapPosition[][] | null;
   selectedFieldId: string | null;
+  hoveredFieldId: string | null;
+  hoveredCentroid: MapPosition | null;
   overviewRequest: number;
   onZoomChange: (zoom: number) => void;
   onOverviewAvailabilityChange: (available: boolean) => void;
@@ -16,6 +18,8 @@ export function MapViewport({
   positions,
   selectedPositions,
   selectedFieldId,
+  hoveredFieldId,
+  hoveredCentroid,
   overviewRequest,
   onZoomChange,
   onOverviewAvailabilityChange,
@@ -50,10 +54,19 @@ export function MapViewport({
     const points = selectedFieldId && selectedPoints.length ? selectedPoints : allPoints;
     if (!points.length) return;
     if (!fittedInitially.current || overviewChanged || selectionChanged) {
-      map.fitBounds(latLngBounds(points), { padding: [32, 32], maxZoom: 16, animate: false });
+      map.fitBounds(latLngBounds(points), { padding: [56, 56], maxZoom: 16, animate: false });
       fittedInitially.current = true;
     }
   }, [map, overviewRequest, positions, selectedFieldId, selectedPositions]);
+
+  const hoveredLatitude = hoveredCentroid?.[0];
+  const hoveredLongitude = hoveredCentroid?.[1];
+  useEffect(() => {
+    if (hoveredFieldId === null || hoveredLatitude === undefined || hoveredLongitude === undefined)
+      return;
+    const center = { lat: hoveredLatitude, lng: hoveredLongitude };
+    if (!map.getBounds().pad(-0.15).contains(center)) map.panTo(center, { animate: true });
+  }, [map, hoveredFieldId, hoveredLatitude, hoveredLongitude]);
 
   return null;
 }

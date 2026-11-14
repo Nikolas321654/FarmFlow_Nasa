@@ -3,25 +3,37 @@ import { useEffect, useRef } from 'react';
 import { Polygon, Tooltip } from 'react-leaflet';
 import type { FieldSummary } from '@/entities/field';
 import type { MapPosition } from '@/shared/lib/geo';
-import { statusColor } from '../model/status';
+import { appearanceFor } from '../model/status';
 
 type FieldBoundaryProps = {
   field: FieldSummary;
   positions: MapPosition[][];
   selected: boolean;
+  hovered: boolean;
   onSelect: (id: string) => void;
+  onHover: (id: string | null) => void;
 };
 
-export function FieldBoundary({ field, positions, selected, onSelect }: FieldBoundaryProps) {
+export function FieldBoundary({
+  field,
+  positions,
+  selected,
+  hovered,
+  onSelect,
+  onHover,
+}: FieldBoundaryProps) {
   const polygon = useRef<LeafletPolygon>(null);
-  const color = statusColor[field.workabilityStatus] ?? '#626960';
+  const color = appearanceFor(field.workabilityStatus).color;
 
   useEffect(() => {
     const element = polygon.current?.getElement();
     if (!element) return;
     element.setAttribute('role', 'button');
     element.setAttribute('tabindex', '0');
-    element.setAttribute('aria-label', `${field.name}, ${field.workabilityStatus} workability`);
+    element.setAttribute(
+      'aria-label',
+      `${field.name}, ${field.workabilityStatus} workability. Select field`,
+    );
     const onKeyDown = (event: Event) => {
       if (!(event instanceof KeyboardEvent)) return;
       if (event.key === 'Enter' || event.key === ' ') {
@@ -29,8 +41,16 @@ export function FieldBoundary({ field, positions, selected, onSelect }: FieldBou
         onSelect(field.id);
       }
     };
+    const onFocus = () => polygon.current?.openTooltip();
+    const onBlur = () => polygon.current?.closeTooltip();
     element.addEventListener('keydown', onKeyDown);
-    return () => element.removeEventListener('keydown', onKeyDown);
+    element.addEventListener('focus', onFocus);
+    element.addEventListener('blur', onBlur);
+    return () => {
+      element.removeEventListener('keydown', onKeyDown);
+      element.removeEventListener('focus', onFocus);
+      element.removeEventListener('blur', onBlur);
+    };
   }, [field.id, field.name, field.workabilityStatus, onSelect]);
 
   return (
@@ -40,13 +60,17 @@ export function FieldBoundary({ field, positions, selected, onSelect }: FieldBou
       pathOptions={{
         color: selected ? '#101D17' : color,
         fillColor: color,
-        fillOpacity: selected ? 0.33 : 0.25,
-        weight: selected ? 4 : 3,
+        fillOpacity: selected ? 0.29 : hovered ? 0.31 : 0.23,
+        weight: selected || hovered ? 4 : 3,
       }}
-      eventHandlers={{ click: () => onSelect(field.id) }}
+      eventHandlers={{
+        click: () => onSelect(field.id),
+        mouseover: () => onHover(field.id),
+        mouseout: () => onHover(null),
+      }}
     >
-      <Tooltip sticky permanent={selected} direction="top">
-        {field.name} · {field.workabilityStatus} workability
+      <Tooltip direction="top" className="rivnova-field-tooltip">
+        {field.name}
       </Tooltip>
     </Polygon>
   );

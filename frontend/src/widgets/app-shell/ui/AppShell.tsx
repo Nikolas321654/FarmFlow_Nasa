@@ -53,7 +53,7 @@ export function AppShell({
             to="/"
             end
             className={({ isActive }) =>
-              `inline-flex min-h-11 items-center gap-3 rounded-control px-3 text-ui-sm font-semibold text-text-primary transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:w-full ${isActive ? 'bg-selection' : ''}`
+              `inline-flex min-h-11 items-center gap-3 rounded-control px-3 text-ui-sm font-medium text-text-primary transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:w-full ${isActive ? 'bg-selection' : ''}`
             }
           >
             {({ isActive }) => (
@@ -82,7 +82,7 @@ export function AppShell({
           aria-label={currentPanelTitle}
           className="order-3 mt-5 max-h-64 min-h-16 overflow-y-auto border-t border-border pt-5 md:order-2 md:mt-8 md:max-h-none md:min-h-0 md:flex-1"
         >
-          <h2 className="text-ui-sm font-semibold text-navy">{currentPanelTitle}</h2>
+          <h2 className="type-page-title">{currentPanelTitle}</h2>
           {panelContent}
         </section>
 

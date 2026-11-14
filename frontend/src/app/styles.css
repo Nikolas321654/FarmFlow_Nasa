@@ -28,12 +28,18 @@
   --radius-control: 0.75rem;
   --radius-card: 1rem;
   --radius-badge: 9999px;
+  --text-ui-2xs: 0.6875rem;
+  --text-ui-2xs--line-height: 1rem;
   --text-ui-xs: 0.75rem;
   --text-ui-xs--line-height: 1rem;
   --text-ui-sm: 0.875rem;
   --text-ui-sm--line-height: 1.25rem;
   --text-ui-base: 1rem;
   --text-ui-base--line-height: 1.5rem;
+  --text-ui-lg: 1.25rem;
+  --text-ui-lg--line-height: 1.625rem;
+  --text-ui-xl: 1.5rem;
+  --text-ui-xl--line-height: 1.875rem;
   --text-display: 2rem;
   --text-display--line-height: 2.5rem;
   --font-sans: Helvetica, Arial, sans-serif;
@@ -60,4 +66,64 @@ body {
 @utility display-accent {
   font-family: var(--font-display);
   font-weight: 400;
+}
+
+/*
+ * Type roles (frontend/docs/design.md, Typography). Body text is regular
+ * text-ui-sm; metadata is regular text-ui-xs in text-secondary. Righteous is
+ * reserved for page titles. Labels are sentence case.
+ */
+@utility type-page-title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--text-ui-xl);
+  line-height: var(--text-ui-xl--line-height);
+  color: var(--color-navy);
+}
+
+/* Panel heading, e.g. "Current conditions". */
+@utility type-panel-title {
+  font-size: var(--text-ui-lg);
+  line-height: var(--text-ui-lg--line-height);
+  font-weight: 600;
+  color: var(--color-navy);
+}
+
+/* Section heading inside a panel, e.g. "Today's actions". */
+@utility type-section-title {
+  font-size: var(--text-ui-sm);
+  line-height: var(--text-ui-sm--line-height);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* Field names and list item titles. */
+@utility type-item-title {
+  font-size: var(--text-ui-sm);
+  line-height: var(--text-ui-sm--line-height);
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+/* Small muted label for data and context, e.g. "Total area". */
+@utility type-label {
+  font-size: var(--text-ui-xs);
+  line-height: var(--text-ui-xs--line-height);
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
+
+@utility type-metric {
+  font-size: var(--text-ui-lg);
+  line-height: var(--text-ui-lg--line-height);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
+}
+
+@utility type-value {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-primary);
 }

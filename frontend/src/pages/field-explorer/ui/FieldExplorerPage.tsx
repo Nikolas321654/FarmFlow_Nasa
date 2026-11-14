@@ -1,31 +1,61 @@
+import { faAnglesLeft, faAnglesUp, faFlask } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useFields } from '@/entities/field';
 import { useCurrentUser } from '@/entities/user';
 import { polygonPositions } from '@/shared/lib/geo';
+import { Button } from '@/shared/ui';
 import { AppShell } from '@/widgets/app-shell';
+import { FieldContextPanel } from '@/widgets/field-context-panel';
 import { FieldMap } from '@/widgets/field-map';
 import { FieldSidebar } from '@/widgets/field-sidebar';
-import { NeedsAttention } from '@/widgets/needs-attention';
+
+const selectedFieldParam = 'field';
+const contextPanelId = 'field-context-panel';
 
 export function FieldExplorerPage() {
   const fieldQuery = useFields();
   const userQuery = useCurrentUser();
   const fields = fieldQuery.data ?? [];
-  const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'demo' | 'mine'>('demo');
+  const isGuest = userQuery.data?.authenticated === false;
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [hoveredFieldId, setHoveredFieldId] = useState<string | null>(null);
+  const [chosenTab, setChosenTab] = useState<'demo' | 'mine' | null>(null);
+  // Panel visibility is UI state, independent of the selected field in the URL.
+  const [panelOpen, setPanelOpen] = useState(true);
+  const [focusPanelOnOpen, setFocusPanelOnOpen] = useState(false);
 
-  const validSelectedFieldId = fields.some(
-    (field) => field.id === selectedFieldId && polygonPositions(field.boundary),
-  )
-    ? selectedFieldId
-    : null;
+  const selectedFieldId = searchParams.get(selectedFieldParam);
+  const selectedField =
+    fields.find((field) => field.id === selectedFieldId && polygonPositions(field.boundary)) ??
+    null;
+  const validSelectedFieldId = selectedField?.id ?? null;
+  // Until the user picks a tab, follow the group of the field opened from the URL.
+  const activeTab = chosenTab ?? (selectedField && !selectedField.isDemo ? 'mine' : 'demo');
 
   const selectField = (id: string | null) => {
-    setSelectedFieldId(id);
+    setSearchParams(
+      (params) => {
+        const next = new URLSearchParams(params);
+        if (id) next.set(selectedFieldParam, id);
+        else next.delete(selectedFieldParam);
+        return next;
+      },
+      { replace: true },
+    );
+    const field = id ? fields.find((item) => item.id === id) : undefined;
+    if (field) setChosenTab(field.isDemo ? 'demo' : 'mine');
+    // Only an explicit field selection opens the panel; clearing it keeps the current state.
     if (id) {
-      const field = fields.find((item) => item.id === id);
-      if (field) setActiveTab(field.isDemo ? 'demo' : 'mine');
+      setFocusPanelOnOpen(false);
+      setPanelOpen(true);
     }
+  };
+
+  const showPanel = () => {
+    setFocusPanelOnOpen(true);
+    setPanelOpen(true);
   };
 
   return (
@@ -35,9 +65,11 @@ export function FieldExplorerPage() {
         <FieldSidebar
           fields={fields}
           selectedFieldId={validSelectedFieldId}
+          hoveredFieldId={hoveredFieldId}
           onSelectField={selectField}
+          onHoverField={setHoveredFieldId}
           activeTab={activeTab}
-          onTabChange={setActiveTab}
+          onTabChange={setChosenTab}
           authenticated={userQuery.data?.authenticated === true}
           authLoading={userQuery.isPending}
           authError={userQuery.isError}
@@ -49,35 +81,77 @@ export function FieldExplorerPage() {
       }
     >
       <section
-        aria-label="Field overview workspace"
-        className="min-w-0 p-3 sm:p-4 md:h-full md:overflow-y-auto"
+        aria-label="Field Explorer workspace"
+        className="min-w-0 md:h-full md:overflow-y-auto min-[1260px]:overflow-hidden"
       >
-        <div className="grid gap-3 sm:gap-4 md:h-full md:min-h-[560px] md:grid-rows-[auto_minmax(320px,3fr)_minmax(170px,1fr)]">
-          <div className="flex min-w-0 flex-wrap items-baseline gap-x-3 gap-y-1">
-            <h1 className="text-xl text-text-primary sm:text-2xl">Field overview</h1>
-            {!fieldQuery.isError && (
-              <span className="text-ui-sm text-text-secondary">
-                {fieldQuery.isPending
-                  ? 'Loading fields…'
-                  : `${fields.length} ${fields.length === 1 ? 'field' : 'fields'}`}
-              </span>
-            )}
+        <div
+          className={`grid min-w-0 gap-3 p-3 sm:gap-4 sm:p-4 min-[1260px]:h-full min-[1260px]:gap-0 min-[1260px]:p-0 ${panelOpen ? 'min-[1260px]:grid-cols-[minmax(0,1fr)_304px]' : 'md:h-full min-[1260px]:grid-cols-1'}`}
+        >
+          <div className="flex min-w-0 flex-col gap-3 md:min-h-0 min-[1260px]:p-4">
+            <div className="min-w-0">
+              <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+                <h1 className="type-page-title">Fields map</h1>
+                {isGuest && (
+                  <span className="inline-flex items-center gap-1.5 rounded-badge border border-border bg-surface px-2.5 py-0.5 text-ui-xs font-medium text-text-secondary">
+                    <FontAwesomeIcon icon={faFlask} aria-hidden="true" />
+                    Demo mode
+                  </span>
+                )}
+              </div>
+              {isGuest && (
+                <p className="mt-1 text-ui-sm text-text-secondary">
+                  Explore sample fields analyzed with NASA satellite data. Sign in to add and save
+                  your own.
+                </p>
+              )}
+            </div>
+            <div
+              // Collapsed below the wide layout, the map takes the panel's space instead of leaving a gap.
+              className={`h-[52dvh] min-h-80 min-w-0 min-[1260px]:h-auto min-[1260px]:min-h-0 min-[1260px]:flex-1 ${panelOpen ? '' : 'md:h-auto md:flex-1'}`}
+            >
+              <FieldMap
+                fields={fields}
+                selectedFieldId={validSelectedFieldId}
+                hoveredFieldId={hoveredFieldId}
+                onSelectField={selectField}
+                onHoverField={setHoveredFieldId}
+                loading={fieldQuery.isPending}
+                error={fieldQuery.isError}
+                controls={
+                  !panelOpen && (
+                    <Button
+                      variant="secondary"
+                      className="shadow-sm"
+                      onClick={showPanel}
+                      autoFocus
+                      aria-expanded={false}
+                      title="Show details panel"
+                    >
+                      <span className="min-[1260px]:hidden" aria-hidden="true">
+                        <FontAwesomeIcon icon={faAnglesUp} />
+                      </span>
+                      <span className="hidden min-[1260px]:inline-block" aria-hidden="true">
+                        <FontAwesomeIcon icon={faAnglesLeft} />
+                      </span>
+                      Show details
+                    </Button>
+                  )
+                }
+              />
+            </div>
           </div>
-          <div className="h-[52dvh] min-h-80 min-w-0 md:h-auto md:min-h-0">
-            <FieldMap
+          {panelOpen && (
+            <FieldContextPanel
+              id={contextPanelId}
               fields={fields}
-              selectedFieldId={validSelectedFieldId}
-              onSelectField={selectField}
+              selectedField={selectedField}
               loading={fieldQuery.isPending}
               error={fieldQuery.isError}
+              onSelectField={selectField}
+              onCollapse={() => setPanelOpen(false)}
+              focusOnMount={focusPanelOnOpen}
             />
-          </div>
-          <NeedsAttention
-            fields={fields}
-            loading={fieldQuery.isPending}
-            error={fieldQuery.isError}
-            onSelectField={selectField}
-          />
+          )}
         </div>
       </section>
     </AppShell>

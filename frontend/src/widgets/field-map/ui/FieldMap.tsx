@@ -1,13 +1,14 @@
 import { faArrowsToCircle, faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import './fieldMap.css';
 import type { FieldSummary } from '@/entities/field';
 import { env } from '@/shared/config/env';
 import { polygonPositions } from '@/shared/lib/geo';
 import { Button } from '@/shared/ui';
-import { statusColor } from '../model/status';
+import { statusAppearance } from '../model/status';
 import { FieldBoundary } from './FieldBoundary';
 import { FieldMarker } from './FieldMarker';
 import { MapViewport } from './MapViewport';
@@ -15,24 +16,29 @@ import { MapViewport } from './MapViewport';
 type FieldMapProps = {
   fields: FieldSummary[];
   selectedFieldId: string | null;
+  hoveredFieldId: string | null;
   onSelectField: (id: string | null) => void;
+  onHoverField: (id: string | null) => void;
   loading?: boolean;
   error?: boolean;
+  /** Extra controls shown in the top-right control row, e.g. a panel toggle. */
+  controls?: ReactNode;
 };
 
-const legend = [
-  ['Optimal', statusColor.Optimal],
-  ['Marginal', statusColor.Marginal],
-  ['Blocked', statusColor.Blocked],
-  ['Unknown', '#626960'],
-] as const;
+const legend = Object.entries(statusAppearance) as [
+  keyof typeof statusAppearance,
+  (typeof statusAppearance)[keyof typeof statusAppearance],
+][];
 
 export function FieldMap({
   fields,
   selectedFieldId,
+  hoveredFieldId,
   onSelectField,
+  onHoverField,
   loading = false,
   error = false,
+  controls,
 }: FieldMapProps) {
   const [overviewRequest, setOverviewRequest] = useState(0);
   const [tileError, setTileError] = useState(false);
@@ -52,6 +58,9 @@ export function FieldMap({
   );
   const invalidCount = fields.length - visibleFields.length;
   const selected = visibleFields.find(({ field }) => field.id === selectedFieldId);
+  const hovered = visibleFields.find(({ field }) => field.id === hoveredFieldId);
+
+  const showAllFields = visibleFields.length > 0 && (selectedFieldId !== null || overviewAvailable);
 
   const showOverview = () => {
     onSelectField(null);
@@ -83,7 +92,9 @@ export function FieldMap({
               key={field.id}
               field={field}
               selected={field.id === selectedFieldId}
+              hovered={field.id === hoveredFieldId}
               onSelect={onSelectField}
+              onHover={onHoverField}
             />
           ) : (
             <FieldBoundary
@@ -91,7 +102,9 @@ export function FieldMap({
               field={field}
               positions={positions}
               selected={field.id === selectedFieldId}
+              hovered={field.id === hoveredFieldId}
               onSelect={onSelectField}
+              onHover={onHoverField}
             />
           ),
         )}
@@ -99,34 +112,37 @@ export function FieldMap({
           positions={visibleFields.map(({ positions }) => positions)}
           selectedPositions={selected?.positions ?? null}
           selectedFieldId={selectedFieldId}
+          hoveredFieldId={hoveredFieldId}
+          hoveredCentroid={hovered ? [hovered.field.centroidLat, hovered.field.centroidLon] : null}
           overviewRequest={overviewRequest}
           onZoomChange={setZoom}
           onOverviewAvailabilityChange={setOverviewAvailable}
         />
       </MapContainer>
 
-      {visibleFields.length > 0 && (selectedFieldId !== null || overviewAvailable) && (
-        <div className="pointer-events-none absolute left-14 right-4 top-4 z-10 flex flex-wrap justify-end gap-2">
-          <Button
-            variant="secondary"
-            className="pointer-events-auto shadow-sm"
-            onClick={showOverview}
-          >
-            <FontAwesomeIcon icon={faArrowsToCircle} aria-hidden="true" /> All fields
-          </Button>
+      {(showAllFields || controls) && (
+        <div className="pointer-events-none absolute left-14 right-4 top-4 z-10 flex flex-wrap justify-end gap-2 [&>*]:pointer-events-auto">
+          {showAllFields && (
+            <Button variant="secondary" className="shadow-sm" onClick={showOverview}>
+              <FontAwesomeIcon icon={faArrowsToCircle} aria-hidden="true" /> All fields
+            </Button>
+          )}
+          {controls}
         </div>
       )}
 
-      <div className="pointer-events-none absolute bottom-7 left-3 z-10 max-w-[calc(100%-1.5rem)] rounded-control border border-border bg-surface/95 px-3 py-2 text-ui-xs text-text-primary shadow-sm sm:bottom-8 sm:left-4">
-        <p className="mb-1 font-semibold">Workability</p>
-        <ul className="flex flex-wrap gap-x-3 gap-y-1">
-          {legend.map(([label, color]) => (
+      <div className="pointer-events-none absolute bottom-7 left-3 z-10 max-w-[calc(100%-1.5rem)] rounded-control border border-border bg-surface px-3 py-2 text-ui-xs text-text-primary sm:bottom-8 sm:left-4">
+        <p className="mb-1 text-ui-xs font-semibold">Workability</p>
+        <ul className="flex flex-wrap gap-x-3 gap-y-1.5">
+          {legend.map(([label, appearance]) => (
             <li key={label} className="flex items-center gap-1.5">
               <span
-                className="size-2.5 rounded-full"
-                style={{ backgroundColor: color }}
+                className="flex size-4 items-center justify-center rounded-full text-[9px] text-white"
+                style={{ backgroundColor: appearance.color }}
                 aria-hidden="true"
-              />
+              >
+                <FontAwesomeIcon icon={appearance.icon} />
+              </span>
               {label}
             </li>
           ))}

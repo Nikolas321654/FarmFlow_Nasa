@@ -33,7 +33,7 @@ The Rivnova interface uses a restrained palette aligned with the original logo S
 
 | Token | HEX | Usage |
 |---|---|---|
-| `navy` | `#183152` | Needs attention section and strong informational contrast |
+| `navy` | `#183152` | Small informational accents and strong text contrast |
 | `primary` | `#24543A` | Primary buttons, active navigation, selected controls |
 | `primary-hover` | `#173A2A` | Hover state for primary actions |
 | `selection` | `#DCE8D8` | Subtle selected card, tab, and navigation backgrounds |
@@ -67,7 +67,7 @@ Never communicate status by color alone. Always include a meaningful label or Fo
 - Use warm cream as the default page background, not pure white.
 - Use Primary Green for important actions and navigation.
 - Use the pale green selection background for selected fields and active navigation.
-- Reserve Navy for the Needs attention section and strong informational contrast.
+- Use Navy sparingly for informational accents and strong text contrast.
 - Use Indigo only for occasional secondary accents and yellow only for small brand details.
 - Use primary text on light surfaces and white text on dark primary surfaces.
 - Use semantic colors consistently; do not introduce new status colors for individual screens.

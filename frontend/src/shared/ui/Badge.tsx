@@ -19,7 +19,7 @@ export function Badge({ children, className = '', icon, tone = 'neutral', ...pro
   return (
     <span
       {...props}
-      className={`inline-flex items-center gap-1.5 rounded-badge px-2.5 py-1 text-ui-xs font-semibold ${toneClasses[tone]} ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-badge px-2.5 py-1 text-ui-xs font-medium ${toneClasses[tone]} ${className}`}
     >
       {icon && <FontAwesomeIcon icon={icon} aria-hidden="true" />}
       {children}
