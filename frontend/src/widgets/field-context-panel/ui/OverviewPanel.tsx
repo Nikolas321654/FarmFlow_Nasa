@@ -2,7 +2,7 @@ import { faDroplet, faHourglassHalf, faWater } from '@fortawesome/free-solid-svg
 import { useFieldDashboards, type FieldDashboard, type FieldSummary } from '@/entities/field';
 import { Button } from '@/shared/ui';
 import { buildTodayActions } from '../model/actions';
-import { summarizeFreshness, summarizeImpact } from '../model/overview';
+import { summarizeImpact, summarizeProvenance } from '../model/overview';
 import { ActionRow } from './ActionRow';
 import { DataFreshnessFooter } from './DataFreshnessFooter';
 import { ImpactRow } from './ImpactRow';
@@ -172,7 +172,7 @@ export function OverviewPanel({ fields, loading, error, onSelectField }: Overvie
       </div>
 
       <DataFreshnessFooter
-        freshness={dashboards.length > 0 ? summarizeFreshness(dashboards) : null}
+        provenance={dashboards.length > 0 ? summarizeProvenance(dashboards) : null}
       />
     </>
   );

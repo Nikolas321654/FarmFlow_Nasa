@@ -1,4 +1,4 @@
-import { useId, useState, type PointerEvent } from 'react';
+import { useId, useState, type KeyboardEvent, type PointerEvent } from 'react';
 
 export type SparklinePoint = {
   date: string;
@@ -9,6 +9,8 @@ type SparklineProps = {
   label: string;
   points: SparklinePoint[];
   digits?: number;
+  description: string;
+  status?: { label: string; tone: 'warning' | 'neutral' };
 };
 
 const width = 100;
@@ -24,7 +26,7 @@ function formatDate(date: string): string {
   return Number.isFinite(timestamp) ? dateFormatter.format(timestamp) : date;
 }
 
-export function Sparkline({ label, points, digits = 2 }: SparklineProps) {
+export function Sparkline({ label, points, digits = 2, description, status }: SparklineProps) {
   const titleId = useId();
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
@@ -71,25 +73,57 @@ export function Sparkline({ label, points, digits = 2 }: SparklineProps) {
     );
   };
 
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const last = points.length - 1;
+    const current = activeIndex ?? last;
+    const next =
+      event.key === 'ArrowLeft'
+        ? Math.max(0, current - 1)
+        : event.key === 'ArrowRight'
+          ? Math.min(last, current + 1)
+          : event.key === 'Home'
+            ? 0
+            : event.key === 'End'
+              ? last
+              : null;
+    if (next === null) return;
+    event.preventDefault();
+    setActiveIndex(next);
+  };
+
   return (
     <figure className="min-w-0">
       <figcaption className="flex items-baseline justify-between gap-2">
-        <span id={titleId} className="type-label">
-          {label}
+        <span className="flex min-w-0 items-baseline gap-2">
+          <span id={titleId} className="type-label" title={description}>
+            {label}
+          </span>
+          {status && (
+            <span
+              className={`text-ui-2xs font-medium ${status.tone === 'warning' ? 'text-status-warning' : 'text-text-secondary'}`}
+            >
+              {status.label}
+            </span>
+          )}
         </span>
         <span className="text-ui-xs tabular-nums">
           <span className="type-value">{shown.value.toFixed(digits)}</span>
           <span className="ml-1.5 text-text-secondary">
             {activeIndex === null
-              ? `${signed.format(change)} in ${points.length}d`
+              ? `${signed.format(change)} vs ${formatDate(first.date)}`
               : formatDate(shown.date)}
           </span>
         </span>
       </figcaption>
       <div
-        className="relative mt-1 h-8 touch-none"
+        tabIndex={0}
+        aria-label={`${label} chart. Use the arrow keys to read daily values.`}
+        aria-describedby={`${titleId}-description`}
+        className="relative mt-1 h-8 touch-none rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         onPointerMove={onPointerMove}
         onPointerLeave={() => setActiveIndex(null)}
+        onKeyDown={onKeyDown}
+        onBlur={() => setActiveIndex(null)}
       >
         <svg
           viewBox={`0 0 ${width} ${height}`}
@@ -125,6 +159,12 @@ export function Sparkline({ label, points, digits = 2 }: SparklineProps) {
           aria-hidden="true"
         />
       </div>
+      <p id={`${titleId}-description`} className="sr-only">
+        {description}
+      </p>
+      <p aria-live="polite" className="sr-only">
+        {activeIndex === null ? '' : `${formatDate(shown.date)}: ${shown.value.toFixed(digits)}`}
+      </p>
       <p id={`${titleId}-summary`} className="sr-only">
         {`${label} from ${first.value.toFixed(digits)} on ${formatDate(first.date)} to ${last.value.toFixed(digits)} on ${formatDate(last.date)}, range ${rawMin.toFixed(digits)} to ${rawMax.toFixed(digits)}.`}
       </p>

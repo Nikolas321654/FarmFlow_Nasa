@@ -1,5 +1,6 @@
 import type { DashboardStressAndIrrigation } from '@/entities/field';
 import { WATER_DEFICIT_ALERT_THRESHOLD } from '@/shared/config/thresholds';
+import { wdiExplanation } from '../model/explanations';
 import { severityTone } from '../model/tones';
 
 type WdiMeterProps = {
@@ -17,20 +18,25 @@ export function WdiMeter({ stress }: WdiMeterProps) {
   const statusLabel = stress.isHiddenStressDetected
     ? 'Hidden stress'
     : aboveThreshold
-      ? 'Above threshold'
-      : 'Within limits';
+      ? `Above ${WATER_DEFICIT_ALERT_THRESHOLD} alert`
+      : stress.irrigationRecommended
+        ? 'Below alert, low moisture'
+        : `Below ${WATER_DEFICIT_ALERT_THRESHOLD} alert`;
+  const statusClass = aboveThreshold
+    ? tone.text
+    : stress.irrigationRecommended
+      ? 'text-status-warning'
+      : 'text-status-success';
 
   return (
     <div>
       <div className="flex items-baseline justify-between gap-2">
-        <p className="type-section-title">Water deficit index</p>
+        <p className="type-section-title" title={wdiExplanation}>
+          Water deficit index
+        </p>
         <p className="text-ui-sm">
           <span className="type-value">{value.toFixed(2)}</span>
-          <span
-            className={`ml-2 text-ui-xs font-medium ${aboveThreshold ? tone.text : 'text-status-success'}`}
-          >
-            {statusLabel}
-          </span>
+          <span className={`ml-2 text-ui-xs font-medium ${statusClass}`}>{statusLabel}</span>
         </p>
       </div>
       <div

@@ -1,4 +1,9 @@
-import { faArrowLeft, faArrowRight, faCircleCheck } from '@fortawesome/free-solid-svg-icons';
+import {
+  faArrowLeft,
+  faArrowRight,
+  faCircleCheck,
+  faFlask,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Link } from 'react-router-dom';
 import {
@@ -10,9 +15,11 @@ import {
 import { withoutLongDashes } from '@/shared/lib/text';
 import { Button, MetaList } from '@/shared/ui';
 import { buildFieldActions, sortActions } from '../model/actions';
-import { summarizeFreshness } from '../model/overview';
+import { ndviExplanation, rootzoneExplanation } from '../model/explanations';
+import { observationRange, summarizeProvenance } from '../model/overview';
 import { severityTone } from '../model/tones';
 import { ActionRow } from './ActionRow';
+import { AssessmentDetails } from './AssessmentDetails';
 import { DataFreshnessFooter } from './DataFreshnessFooter';
 import { ParcelMotif } from './ParcelMotif';
 import { Sparkline } from './Sparkline';
@@ -37,6 +44,9 @@ export function SelectedFieldPanel({ field, onBack }: SelectedFieldPanelProps) {
   const series = dashboard?.timeSeries.slice(-trendDays) ?? [];
   const forecast = workabilityQuery.data?.forecast48h ?? [];
   const forecastNote = forecast.find((period) => period.status !== 'Optimal') ?? forecast[0];
+  const provenance = dashboard ? summarizeProvenance([dashboard]) : null;
+  const simulated = provenance?.simulated ?? false;
+  const range = observationRange(series.map((point) => point.date));
 
   return (
     <>
@@ -78,6 +88,23 @@ export function SelectedFieldPanel({ field, onBack }: SelectedFieldPanelProps) {
           </div>
         )}
 
+        {dashboard && simulated && !field.isDemo && (
+          <div
+            role="status"
+            className="flex items-start gap-3 rounded-control bg-status-warning-bg px-3 py-2.5"
+          >
+            <FontAwesomeIcon
+              icon={faFlask}
+              className="mt-0.5 text-status-warning"
+              aria-hidden="true"
+            />
+            <p className="text-ui-sm text-text-primary">
+              Live NASA data is unavailable for this field, so the values below are simulated
+              samples. Treat them as illustrative, not as a diagnosis.
+            </p>
+          </div>
+        )}
+
         {dashboard && (
           <>
             <section aria-label="Recommendation">
@@ -103,7 +130,9 @@ export function SelectedFieldPanel({ field, onBack }: SelectedFieldPanelProps) {
                     aria-hidden="true"
                   />
                   <div>
-                    <p className="type-item-title">No action needed today</p>
+                    <p className="type-item-title">
+                      {simulated ? 'No action in this sample data' : 'No action needed today'}
+                    </p>
                     <p className="mt-1 text-ui-sm text-text-secondary">
                       {withoutLongDashes(
                         withoutFieldPrefix(
@@ -131,16 +160,26 @@ export function SelectedFieldPanel({ field, onBack }: SelectedFieldPanelProps) {
             </section>
 
             <section aria-labelledby="trend-title">
-              <p id="trend-title" className="mb-2 type-section-title">
-                Last {series.length} days
-              </p>
+              <div className="mb-2 flex items-baseline justify-between gap-2">
+                <p id="trend-title" className="type-section-title">
+                  Observations
+                </p>
+                <p className="type-label tabular-nums">{range ?? 'Dates unavailable'}</p>
+              </div>
               <div className="space-y-3">
                 <Sparkline
                   label="NDVI"
+                  description={ndviExplanation}
+                  status={
+                    dashboard.biomass.isAnomalyDetected
+                      ? { label: 'Decline detected', tone: 'warning' }
+                      : { label: 'No anomaly', tone: 'neutral' }
+                  }
                   points={series.map((point) => ({ date: point.date, value: point.ndvi }))}
                 />
                 <Sparkline
                   label="Rootzone moisture"
+                  description={rootzoneExplanation}
                   points={series.map((point) => ({
                     date: point.date,
                     value: point.rootzoneMoisture,
@@ -178,9 +217,22 @@ export function SelectedFieldPanel({ field, onBack }: SelectedFieldPanelProps) {
                   {withoutLongDashes(forecastNote.period)}: {withoutLongDashes(forecastNote.reason)}
                 </p>
               )}
+              {provenance?.live && (
+                <p className="mt-1 text-ui-xs text-text-secondary">
+                  NASA POWER provides no rain forecast, so the next 24-48h assume no new rain.
+                </p>
+              )}
             </>
           )}
         </section>
+
+        {dashboard && provenance && (
+          <AssessmentDetails
+            dashboard={dashboard}
+            simulated={provenance.simulated}
+            live={provenance.live}
+          />
+        )}
 
         <Link
           to={`/fields/${encodeURIComponent(field.id)}`}
@@ -190,7 +242,7 @@ export function SelectedFieldPanel({ field, onBack }: SelectedFieldPanelProps) {
         </Link>
       </div>
 
-      <DataFreshnessFooter freshness={dashboard ? summarizeFreshness([dashboard]) : null} />
+      <DataFreshnessFooter provenance={provenance} />
     </>
   );
 }
