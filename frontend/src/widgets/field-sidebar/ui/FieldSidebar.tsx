@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { FieldCard, type FieldSummary } from '@/entities/field';
+import { FieldCard, fieldsInGroup, visibleFieldGroup, type FieldSummary } from '@/entities/field';
 import { polygonPositions } from '@/shared/lib/geo';
 import { Button } from '@/shared/ui';
 
@@ -30,9 +30,7 @@ export function FieldSidebar({
   error,
   onRetryFields,
 }: FieldSidebarProps) {
-  const demoFields = fields.filter((field) => field.isDemo);
-  const myFields = fields.filter((field) => !field.isDemo);
-  const shownFields = authenticated && activeTab === 'mine' ? myFields : demoFields;
+  const shownFields = fieldsInGroup(fields, visibleFieldGroup(activeTab, authenticated));
 
   return (
     <div className="mt-2 min-w-0">

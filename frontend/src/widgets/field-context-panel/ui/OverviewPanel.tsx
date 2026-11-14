@@ -1,5 +1,10 @@
 import { faDroplet, faHourglassHalf, faWater } from '@fortawesome/free-solid-svg-icons';
-import { useFieldDashboards, type FieldDashboard, type FieldSummary } from '@/entities/field';
+import {
+  useFieldDashboards,
+  type FieldDashboard,
+  type FieldGroup,
+  type FieldSummary,
+} from '@/entities/field';
 import { Button } from '@/shared/ui';
 import { buildTodayActions } from '../model/actions';
 import { summarizeImpact, summarizeProvenance } from '../model/overview';
@@ -11,6 +16,7 @@ import { StatTile } from './StatTile';
 
 type OverviewPanelProps = {
   fields: FieldSummary[];
+  group: FieldGroup;
   loading: boolean;
   error: boolean;
   onSelectField: (id: string) => void;
@@ -30,7 +36,13 @@ function formatArea(hectares: number): string {
 }
 const volumeFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 });
 
-export function OverviewPanel({ fields, loading, error, onSelectField }: OverviewPanelProps) {
+export function OverviewPanel({
+  fields,
+  group,
+  loading,
+  error,
+  onSelectField,
+}: OverviewPanelProps) {
   const dashboardQueries = useFieldDashboards(fields.map((field) => field.id));
   const dashboards = dashboardQueries
     .map((query) => query.data)
@@ -47,12 +59,13 @@ export function OverviewPanel({ fields, loading, error, onSelectField }: Overvie
 
   return (
     <>
-      <div className="relative shrink-0 overflow-hidden border-b border-border px-5 pb-4 pt-5">
+      <div className="relative shrink-0 border-b border-border/70 px-5 pb-5 pt-14">
         <ParcelMotif />
-        <div className="relative max-w-[80%]">
+        <div>
           <h2 className="type-page-title">Current conditions</h2>
+          <p className="mt-0.5 type-label">{group === 'mine' ? 'My fields' : 'Demo fields'}</p>
         </div>
-        <dl className="relative mt-4 grid grid-cols-2 gap-2">
+        <dl className="mt-4 grid grid-cols-2 gap-2">
           <StatTile label="Fields" value={unavailable ?? String(fields.length)} />
           <StatTile
             label="Total area"
@@ -76,7 +89,10 @@ export function OverviewPanel({ fields, loading, error, onSelectField }: Overvie
         </dl>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-5 pt-4" aria-live="polite">
+      <div
+        className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-5 pt-5"
+        aria-live="polite"
+      >
         <section aria-labelledby="today-actions-title">
           <div className="flex items-baseline justify-between gap-2">
             <h3 id="today-actions-title" className="type-section-title">
@@ -99,14 +115,16 @@ export function OverviewPanel({ fields, loading, error, onSelectField }: Overvie
           {analyticsReady && actions.length === 0 && failedQueries.length === 0 && (
             <p className="mt-3 text-ui-sm text-text-secondary">
               {fields.length === 0
-                ? 'No fields available to review.'
+                ? group === 'mine'
+                  ? 'You have no personal fields yet. Add a field to see its conditions here.'
+                  : 'No demo fields are available.'
                 : 'No actions needed today. All fields are within safe limits.'}
             </p>
           )}
           {actions.length > 0 && (
-            <ul className="mt-1 divide-y divide-border">
+            <ul className="-mx-3 mt-2 space-y-0.5">
               {actions.map((action) => (
-                <li key={action.id} className="py-1">
+                <li key={action.id}>
                   <ActionRow action={action} onSelect={onSelectField} />
                 </li>
               ))}
@@ -135,7 +153,7 @@ export function OverviewPanel({ fields, loading, error, onSelectField }: Overvie
         </section>
 
         {impact && (
-          <section aria-labelledby="impact-title" className="mt-5 border-t border-border pt-4">
+          <section aria-labelledby="impact-title" className="mt-7">
             <h3 id="impact-title" className="type-section-title">
               Impact estimate
             </h3>
@@ -171,9 +189,11 @@ export function OverviewPanel({ fields, loading, error, onSelectField }: Overvie
         )}
       </div>
 
-      <DataFreshnessFooter
-        provenance={dashboards.length > 0 ? summarizeProvenance(dashboards) : null}
-      />
+      {fields.length > 0 && (
+        <DataFreshnessFooter
+          provenance={dashboards.length > 0 ? summarizeProvenance(dashboards) : null}
+        />
+      )}
     </>
   );
 }

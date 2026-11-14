@@ -16,6 +16,7 @@ export {
   useFieldWorkability,
 } from './api/fieldQueries';
 export { fieldQueryKeys } from './api/queryKeys';
+export { fieldsInGroup, visibleFieldGroup, type FieldGroup } from './lib/fieldGroups';
 export { fieldShortName, withoutFieldPrefix } from './lib/fieldName';
 export { FieldCard } from './ui/FieldCard';
 export type {

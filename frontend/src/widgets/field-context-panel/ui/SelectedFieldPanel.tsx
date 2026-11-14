@@ -50,9 +50,9 @@ export function SelectedFieldPanel({ field, onBack }: SelectedFieldPanelProps) {
 
   return (
     <>
-      <div className="relative shrink-0 overflow-hidden border-b border-border px-5 pb-4 pt-4">
+      <div className="relative shrink-0 border-b border-border/70 px-5 pb-5 pt-4">
         <ParcelMotif />
-        <div className="relative max-w-[80%]">
+        <div className="pr-10">
           <button
             type="button"
             onClick={onBack}
@@ -69,7 +69,10 @@ export function SelectedFieldPanel({ field, onBack }: SelectedFieldPanelProps) {
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 pb-5 pt-4" aria-live="polite">
+      <div
+        className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 pb-5 pt-5"
+        aria-live="polite"
+      >
         {dashboardQuery.isPending && (
           <p role="status" className="text-ui-sm text-text-secondary">
             Loading field analytics…
@@ -145,9 +148,9 @@ export function SelectedFieldPanel({ field, onBack }: SelectedFieldPanelProps) {
                 </div>
               )}
               {otherActions.length > 0 && (
-                <ul className="mt-1 divide-y divide-border">
+                <ul className="-mx-3 mt-2 space-y-0.5">
                   {otherActions.map((action) => (
-                    <li key={action.id} className="py-1">
+                    <li key={action.id}>
                       <ActionRow action={action} />
                     </li>
                   ))}

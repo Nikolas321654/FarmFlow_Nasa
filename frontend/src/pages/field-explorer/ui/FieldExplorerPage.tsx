@@ -2,7 +2,7 @@ import { faAnglesLeft, faAnglesUp, faFlask } from '@fortawesome/free-solid-svg-i
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useFields } from '@/entities/field';
+import { fieldsInGroup, useFields, visibleFieldGroup } from '@/entities/field';
 import { useCurrentUser } from '@/entities/user';
 import { polygonPositions } from '@/shared/lib/geo';
 import { Button } from '@/shared/ui';
@@ -31,6 +31,7 @@ export function FieldExplorerPage() {
     null;
   const validSelectedFieldId = selectedField?.id ?? null;
   const activeTab = chosenTab ?? (selectedField && !selectedField.isDemo ? 'mine' : 'demo');
+  const panelGroup = visibleFieldGroup(activeTab, userQuery.data?.authenticated === true);
 
   const selectField = (id: string | null) => {
     setSearchParams(
@@ -78,7 +79,7 @@ export function FieldExplorerPage() {
         className="min-w-0 md:h-full md:overflow-y-auto min-[1260px]:overflow-hidden"
       >
         <div
-          className={`grid min-w-0 gap-3 p-3 sm:gap-4 sm:p-4 min-[1260px]:h-full min-[1260px]:gap-0 min-[1260px]:p-0 ${panelOpen ? 'min-[1260px]:grid-cols-[minmax(0,1fr)_304px]' : 'md:h-full min-[1260px]:grid-cols-1'}`}
+          className={`grid min-w-0 gap-3 p-3 sm:max-[1259px]:gap-4 sm:max-[1259px]:p-4 min-[1260px]:h-full min-[1260px]:gap-0 min-[1260px]:p-0 ${panelOpen ? 'min-[1260px]:grid-cols-[minmax(0,1fr)_304px]' : 'md:h-full min-[1260px]:grid-cols-1'}`}
         >
           <div className="flex min-w-0 flex-col gap-3 md:min-h-0 min-[1260px]:p-4">
             <div className="min-w-0">
@@ -135,7 +136,8 @@ export function FieldExplorerPage() {
           {panelOpen && (
             <FieldContextPanel
               id={contextPanelId}
-              fields={fields}
+              fields={fieldsInGroup(fields, panelGroup)}
+              group={panelGroup}
               selectedField={selectedField}
               loading={fieldQuery.isPending}
               error={fieldQuery.isError}

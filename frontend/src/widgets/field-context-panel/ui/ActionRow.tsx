@@ -1,6 +1,7 @@
 import { faChevronRight } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { FieldAction } from '../model/actions';
+import { panelRowBase, panelRowInteractive } from '../model/rowStyles';
 import { actionIcon, severityTone } from '../model/tones';
 
 type ActionRowProps = {
@@ -31,19 +32,19 @@ export function ActionRow({ action, onSelect }: ActionRowProps) {
     </>
   );
 
-  if (!onSelect) return <div className="flex items-start gap-3 py-1.5">{content}</div>;
+  if (!onSelect) return <div className={`flex items-start gap-3 ${panelRowBase}`}>{content}</div>;
 
   return (
     <button
       type="button"
       onClick={() => onSelect(action.fieldId)}
       title={action.recommendation}
-      className="group -mx-2 flex w-[calc(100%+1rem)] items-start gap-3 rounded-control px-2 py-1.5 text-left transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary"
+      className={`group flex w-full items-start gap-3 text-left ${panelRowInteractive}`}
     >
       {content}
       <FontAwesomeIcon
         icon={faChevronRight}
-        className="mt-1.5 shrink-0 text-ui-xs text-text-secondary group-hover:text-primary"
+        className="mt-1.5 shrink-0 text-ui-xs text-text-secondary group-hover:text-primary group-focus-visible:text-primary"
         aria-hidden="true"
       />
     </button>

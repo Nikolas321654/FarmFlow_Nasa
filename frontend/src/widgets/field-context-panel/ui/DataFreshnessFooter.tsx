@@ -8,23 +8,21 @@ type DataFreshnessFooterProps = {
   provenance: DataProvenance | null;
 };
 
-function sourceLabel(provenance: DataProvenance): string {
-  if (provenance.live && provenance.simulated) return 'NASA POWER and simulated sample data';
-  if (provenance.live) return 'NASA POWER';
-  return 'Simulated sample data';
+function sourceLabel(provenance: DataProvenance): string | null {
+  return provenance.live ? 'NASA POWER' : null;
 }
 
 export function DataFreshnessFooter({ provenance }: DataFreshnessFooterProps) {
   const generated = provenance?.generatedAt ? formatTimeAgo(provenance.generatedAt) : null;
 
   return (
-    <footer className="flex shrink-0 items-start gap-2 border-t border-border px-5 py-3 text-ui-xs text-text-secondary">
+    <footer className="flex shrink-0 items-start gap-2 border-t border-border/70 px-5 py-3 text-ui-xs text-text-secondary">
       <FontAwesomeIcon icon={faSatellite} className="mt-0.5" aria-hidden="true" />
       <div className="grid min-w-0 gap-0.5">
         {provenance ? (
           <>
             <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              <span>{sourceLabel(provenance)}</span>
+              {sourceLabel(provenance) && <span>{sourceLabel(provenance)}</span>}
               {provenance.simulated && (
                 <span
                   className="rounded-badge border border-border px-2 py-0.5 text-ui-2xs font-medium"
