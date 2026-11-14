@@ -66,8 +66,10 @@ Use meaningful labels and units. Explain a `Blocked` status.
 - **Fields Overview / Map:** Compare fields and select one for details.
 - **Field Details / Dashboard:** Show the action, reasons, trends, and data provenance.
 - **Create Field:** Draw or import a boundary, review field details, and save.
-- **Action Center and Predictions:** If approved in [scope.md](scope.md), show
-  prioritized alerts and clearly labeled forecasts or estimates.
+- **Action Center and Predictions:** The backend provides prioritized alerts
+  (`GET /api/alerts`), a 7-day soil moisture forecast and a yield estimate
+  (`/api/fields/{id}/predictions/*`). The frontend does not show them yet. When it
+  does, label forecasts and estimates clearly and keep them separate from observations.
 
 The suggested desktop layout is a field list, map, and context panel. A separate
 details page remains an option. On mobile, keep the map usable and place details

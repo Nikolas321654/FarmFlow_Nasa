@@ -21,7 +21,7 @@
 `"Critical"` | `"Warning"` | `"Info"`
 
 ### `AlertType`
-`"EarlyWaterStress"` | `"SmartIrrigation"` | `"SprayingBlocked"` | `"BiomassAnomaly"` | `"Predictive72hStress"`
+`"SmartIrrigation"` | `"Proactive72hStress"` | `"BiomassAnomaly"` | `"WorkabilityBlocked"` | `"WorkabilityMarginal"`
 
 ---
 
@@ -357,7 +357,7 @@ Runs in-process inference on the **PyTorch LSTM / 1D-CNN ONNX model** (`soil_for
 ```json
 {
   "fieldId": "11111111-1111-1111-1111-111111111111",
-  "modelName": "soil_forecast_lstm_v1.onnx",
+  "modelName": "soil_forecast.onnx",
   "proactive72hStressWarning": true,
   "forecastedDay3WaterDeficitIndex": 0.69,
   "proactiveRecommendation": "AI Forecast Warning: Rootzone moisture is projected to drop to 0.22 in 72 hours (WDI 0.69). Schedule preventive irrigation within 48 hours.",
@@ -397,7 +397,7 @@ Runs in-process inference on the **Tabular ML ONNX Regressor** (`yield_model.onn
 {
   "fieldId": "11111111-1111-1111-1111-111111111111",
   "cropType": "Wheat",
-  "modelName": "yield_model_rf_v1.onnx",
+  "modelName": "yield_model.onnx",
   "predictedYieldTonsPerHa": 5.84,
   "estimatedTotalHarvestTons": 833.95,
   "regionalBaselineTonsPerHa": 5.20,
@@ -417,6 +417,21 @@ Runs in-process inference on the **Tabular ML ONNX Regressor** (`yield_model.onn
 
 ### 5.1 `GET /api/alerts`
 Returns all active task cards and warnings across all fields, sorted by severity (`Critical` $\rightarrow$ `Warning` $\rightarrow$ `Info`) for the main Action Center (`P1-4`).
+
+- **Visibility:** Uses the same access rules as `GET /api/fields`. Guests receive alerts for public demo fields only; signed-in users receive alerts for demo fields and their own fields. An empty array is returned when no fields are accessible.
+- **Ordering:** Severity first, then `fieldName`, then `alertType` (ordinal).
+- **Identifiers:** `id` is deterministic, derived from a SHA-256 hash of `fieldId` and `alertType`, so the same alert keeps its id between requests.
+- **Feedback:** `userFeedbackAccurate` holds the latest stored feedback for the same `fieldId` and `alertType`, or `null`.
+
+#### Alert generation rules (actual backend behavior)
+
+| `alertType` | Raised when | `severity` |
+| :--- | :--- | :--- |
+| `SmartIrrigation` | Irrigation is recommended or hidden water stress is detected | Stress severity; `Info` is promoted to `Warning` |
+| `Proactive72hStress` | The ONNX soil forecast projects a Day +3 WDI above `0.65` | `Critical` above `0.78`, otherwise `Warning` |
+| `BiomassAnomaly` | The vegetation anomaly scout detects an unusual NDVI drop | `Warning` |
+| `WorkabilityBlocked` | Workability is `Blocked` or spraying is not safe | `Warning` if `Blocked`, otherwise `Info` |
+| `WorkabilityMarginal` | Workability is `Marginal` and spraying is safe | `Info` |
 
 #### Response `200 OK`
 ```json
@@ -449,6 +464,8 @@ Returns all active task cards and warnings across all fields, sorted by severity
 ---
 
 ### 5.2 `POST /api/alerts/{id}/feedback`
+> **Status: not implemented.** The backend currently registers only `GET /api/alerts`. Stored feedback is read from the `AlertFeedbacks` table, but no endpoint writes to it yet. The contract below is the planned design.
+
 Records farmer confirmation or dismissal of an alert (*"Was this warning accurate? Yes / No"*, `P2-1`).
 
 #### Request Body
