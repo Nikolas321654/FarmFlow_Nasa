@@ -10,6 +10,7 @@ type ShellAccount = {
 };
 
 type AppShellProps = {
+  children?: ReactNode;
   account?: ShellAccount | null;
   onSignIn?: () => void;
   onAccountMenu?: () => void;
@@ -18,6 +19,7 @@ type AppShellProps = {
 };
 
 export function AppShell({
+  children,
   account,
   onSignIn,
   onAccountMenu,
@@ -122,7 +124,7 @@ export function AppShell({
         aria-label="Application workspace"
         className="relative isolate min-h-[55dvh] min-w-0 flex-1 rounded-card border border-border bg-surface-muted md:min-h-0 md:overflow-hidden"
       >
-        <Outlet />
+        {children ?? <Outlet />}
       </main>
     </div>
   );

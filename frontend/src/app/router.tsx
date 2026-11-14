@@ -8,8 +8,8 @@ import { AppShell } from '@/widgets/app-shell';
 export function AppRouter() {
   return (
     <Routes>
+      <Route path="/" element={<FieldExplorerPage />} />
       <Route element={<AppShell />}>
-        <Route index element={<FieldExplorerPage />} />
         <Route path="fields/new" element={<AddFieldPage />} />
         <Route path="fields/:id" element={<FieldInsightsPage />} />
         <Route path="*" element={<NotFoundPage />} />

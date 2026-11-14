@@ -1,6 +1,6 @@
-import type { HTMLAttributes } from 'react';
+import type { ComponentPropsWithRef } from 'react';
 
-type CardProps = HTMLAttributes<HTMLDivElement> & {
+type CardProps = ComponentPropsWithRef<'div'> & {
   tone?: 'default' | 'muted';
 };
 

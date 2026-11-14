@@ -15,6 +15,7 @@ export {
   useFieldWorkability,
 } from './api/fieldQueries';
 export { fieldQueryKeys } from './api/queryKeys';
+export { FieldCard } from './ui/FieldCard';
 export type {
   AlertSeverity,
   BiomassTrend,
