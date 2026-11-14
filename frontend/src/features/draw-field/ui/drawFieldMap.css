@@ -1,0 +1,9 @@
+.rivnova-draw-map .marker-icon {
+  border-color: var(--color-primary);
+  background: var(--color-surface);
+}
+
+.rivnova-draw-map .marker-icon-middle {
+  border-color: var(--color-primary);
+  opacity: 0.75;
+}
