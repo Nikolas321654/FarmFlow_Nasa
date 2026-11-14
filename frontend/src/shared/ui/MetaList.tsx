@@ -6,7 +6,7 @@ type MetaListProps = {
 };
 
 export function MetaList({ children, className = '' }: MetaListProps) {
-  const items = Children.toArray(children);
+  const items = Children.toArray(children).filter((child) => child !== '');
 
   return (
     <span className={`flex flex-wrap items-center gap-x-1.5 gap-y-0.5 ${className}`}>

@@ -1,7 +1,7 @@
 import { faMap, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import type { ReactNode } from 'react';
-import { Link, NavLink, Outlet, useMatch } from 'react-router-dom';
+import { Link, NavLink, Outlet } from 'react-router-dom';
 import { BrandLogo } from '@/shared/ui';
 import { AccountFooter } from './AccountFooter';
 
@@ -12,11 +12,7 @@ type AppShellProps = {
 };
 
 export function AppShell({ children, panelTitle, panelContent }: AppShellProps) {
-  const isAddField = useMatch('/fields/new');
-  const isFieldInsights = useMatch('/fields/:id');
-  const currentPanelTitle =
-    panelTitle ??
-    (isAddField ? 'Field configuration' : isFieldInsights ? 'Field Insights' : 'Fields');
+  const currentPanelTitle = panelTitle ?? 'Fields';
 
   return (
     <div className="relative flex min-h-dvh flex-col gap-3 bg-background p-3 sm:p-4 md:grid md:h-dvh md:grid-cols-[21rem_minmax(0,1fr)] xl:grid-cols-[23rem_minmax(0,1fr)]">
@@ -64,17 +60,19 @@ export function AppShell({ children, panelTitle, panelContent }: AppShellProps) 
           </NavLink>
         </nav>
 
-        <section
-          aria-label={currentPanelTitle}
-          className="order-3 mt-5 max-h-64 min-h-16 overflow-y-auto border-t border-border pt-5 md:order-2 md:mt-8 md:max-h-none md:min-h-0 md:flex-1"
-        >
-          <h2 className="type-page-title">{currentPanelTitle}</h2>
-          {panelContent}
-        </section>
+        {panelContent && (
+          <section
+            aria-label={currentPanelTitle}
+            className="order-3 mt-5 max-h-64 min-h-16 overflow-y-auto border-t border-border pt-5 md:order-2 md:mt-8 md:max-h-none md:min-h-0 md:flex-1"
+          >
+            <h2 className="type-page-title">{currentPanelTitle}</h2>
+            {panelContent}
+          </section>
+        )}
 
         <footer
           aria-label="Account"
-          className="order-2 mt-5 shrink-0 border-t border-border pt-4 md:order-3 md:mt-4"
+          className={`order-2 mt-5 shrink-0 border-t border-border pt-4 md:order-3 ${panelContent ? 'md:mt-4' : 'md:mt-auto'}`}
         >
           <AccountFooter />
         </footer>
