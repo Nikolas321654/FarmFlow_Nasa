@@ -78,11 +78,44 @@ export function AppShell({
 
         <section
           aria-label={currentPanelTitle}
-          className="mt-5 min-h-16 flex-1 border-t border-border pt-5 md:mt-8 md:min-h-0 md:overflow-y-auto"
+          className="order-3 mt-5 max-h-64 min-h-16 overflow-y-auto border-t border-border pt-5 md:order-2 md:mt-8 md:max-h-none md:min-h-0 md:flex-1"
         >
           <h2 className="text-ui-sm font-semibold text-text-secondary">{currentPanelTitle}</h2>
           {panelContent}
         </section>
+
+        <footer
+          aria-label="Account"
+          className="order-2 mt-5 shrink-0 border-t border-border pt-4 md:order-3 md:mt-4"
+        >
+          {account ? (
+            <Button
+              variant="secondary"
+              onClick={onAccountMenu}
+              disabled={!onAccountMenu}
+              aria-label={`Open account menu for ${account.displayName}`}
+              className="w-full justify-start rounded-control px-3"
+            >
+              {account.avatarUrl ? (
+                <img src={account.avatarUrl} alt="" className="h-7 w-7 rounded-full object-cover" />
+              ) : (
+                <FontAwesomeIcon icon={faUser} aria-hidden="true" />
+              )}
+              <span className="truncate">{account.displayName}</span>
+            </Button>
+          ) : (
+            <Button
+              variant="secondary"
+              onClick={onSignIn}
+              disabled={!onSignIn}
+              aria-label="Sign in with Google"
+              className="w-full justify-start border-border bg-surface px-3 text-text-primary disabled:cursor-default! disabled:opacity-100!"
+            >
+              <FontAwesomeIcon icon={faRightToBracket} aria-hidden="true" />
+              <span>Sign in</span>
+            </Button>
+          )}
+        </footer>
       </aside>
 
       <main
@@ -91,36 +124,6 @@ export function AppShell({
       >
         <Outlet />
       </main>
-
-      <div className="absolute right-6 top-6 z-10 md:right-8 md:top-8">
-        {account ? (
-          <Button
-            variant="secondary"
-            onClick={onAccountMenu}
-            disabled={!onAccountMenu}
-            aria-label={`Open account menu for ${account.displayName}`}
-            className="rounded-full px-3"
-          >
-            {account.avatarUrl ? (
-              <img src={account.avatarUrl} alt="" className="h-7 w-7 rounded-full object-cover" />
-            ) : (
-              <FontAwesomeIcon icon={faUser} aria-hidden="true" />
-            )}
-            <span className="hidden max-w-32 truncate lg:inline">{account.displayName}</span>
-          </Button>
-        ) : (
-          <Button
-            variant="secondary"
-            onClick={onSignIn}
-            disabled={!onSignIn}
-            aria-label="Sign in with Google"
-            className="rounded-full border-border bg-surface px-3 text-text-primary disabled:cursor-default! disabled:opacity-100! md:px-4"
-          >
-            <FontAwesomeIcon icon={faRightToBracket} aria-hidden="true" />
-            <span>Sign in</span>
-          </Button>
-        )}
-      </div>
     </div>
   );
 }

@@ -37,6 +37,7 @@ export function FieldMap({
   const [overviewRequest, setOverviewRequest] = useState(0);
   const [tileError, setTileError] = useState(false);
   const [zoom, setZoom] = useState(6);
+  const [overviewAvailable, setOverviewAvailable] = useState(false);
   const visibleFields = useMemo(
     () =>
       fields
@@ -100,19 +101,21 @@ export function FieldMap({
           selectedFieldId={selectedFieldId}
           overviewRequest={overviewRequest}
           onZoomChange={setZoom}
+          onOverviewAvailabilityChange={setOverviewAvailable}
         />
       </MapContainer>
 
-      <div className="pointer-events-none absolute left-14 right-4 top-4 z-10 flex flex-wrap justify-end gap-2 md:top-20">
-        <Button
-          variant="secondary"
-          className="pointer-events-auto shadow-sm"
-          onClick={showOverview}
-          disabled={!visibleFields.length}
-        >
-          <FontAwesomeIcon icon={faArrowsToCircle} aria-hidden="true" /> Overview
-        </Button>
-      </div>
+      {visibleFields.length > 0 && (selectedFieldId !== null || overviewAvailable) && (
+        <div className="pointer-events-none absolute left-14 right-4 top-4 z-10 flex flex-wrap justify-end gap-2">
+          <Button
+            variant="secondary"
+            className="pointer-events-auto shadow-sm"
+            onClick={showOverview}
+          >
+            <FontAwesomeIcon icon={faArrowsToCircle} aria-hidden="true" /> All fields
+          </Button>
+        </div>
+      )}
 
       <div className="pointer-events-none absolute bottom-7 left-3 z-10 max-w-[calc(100%-1.5rem)] rounded-control border border-border bg-surface/95 px-3 py-2 text-ui-xs text-text-primary shadow-sm sm:bottom-8 sm:left-4">
         <p className="mb-1 font-semibold">Workability</p>
@@ -133,7 +136,7 @@ export function FieldMap({
       {(loading || error || (!fields.length && !loading) || invalidCount > 0 || tileError) && (
         <div
           role="status"
-          className="pointer-events-none absolute left-3 right-3 top-20 z-10 mx-auto max-w-md space-y-1 rounded-control border border-border bg-surface/95 p-3 text-ui-sm text-text-primary shadow-sm md:top-36"
+          className="pointer-events-none absolute left-3 right-3 top-20 z-10 mx-auto max-w-md space-y-1 rounded-control border border-border bg-surface/95 p-3 text-ui-sm text-text-primary shadow-sm"
         >
           {loading && <p>Loading fields…</p>}
           {error && <p>Unable to load fields. Check the backend connection and try again.</p>}

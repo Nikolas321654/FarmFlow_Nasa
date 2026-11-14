@@ -9,6 +9,7 @@ type MapViewportProps = {
   selectedFieldId: string | null;
   overviewRequest: number;
   onZoomChange: (zoom: number) => void;
+  onOverviewAvailabilityChange: (available: boolean) => void;
 };
 
 export function MapViewport({
@@ -17,8 +18,17 @@ export function MapViewport({
   selectedFieldId,
   overviewRequest,
   onZoomChange,
+  onOverviewAvailabilityChange,
 }: MapViewportProps) {
-  const map = useMapEvents({ zoomend: () => onZoomChange(map.getZoom()) });
+  const map = useMapEvents({
+    zoomend: () => onZoomChange(map.getZoom()),
+    moveend: () => {
+      const allPoints = positions.flat(2);
+      if (allPoints.length) {
+        onOverviewAvailabilityChange(!map.getBounds().contains(latLngBounds(allPoints)));
+      }
+    },
+  });
   const fittedInitially = useRef(false);
   const previousSelection = useRef<string | null>(null);
   const previousOverviewRequest = useRef(overviewRequest);
