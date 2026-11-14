@@ -1,4 +1,3 @@
-import { faDroplet, faLeaf } from '@fortawesome/free-solid-svg-icons';
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import type { FieldSummary } from '../model/types';
@@ -25,7 +24,7 @@ export function FieldCard({ field, selected, selectable, onSelect }: FieldCardPr
     <Card
       ref={card}
       tone={selected ? 'selected' : 'default'}
-      className={`min-w-0 !rounded-control !p-3 transition-colors ${selected ? '!border-primary ring-1 ring-primary' : ''}`}
+      className={`min-w-0 !rounded-control !px-3 !py-2.5 transition-colors ${selected ? '!border-primary' : ''}`}
     >
       <button
         type="button"
@@ -35,32 +34,28 @@ export function FieldCard({ field, selected, selectable, onSelect }: FieldCardPr
         aria-label={`Select ${field.name} on map`}
         className="w-full min-w-0 rounded-control text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed"
       >
-        <span className="block truncate text-ui-sm font-semibold text-text-primary">
+        <span className="block truncate text-ui-base font-semibold text-text-primary">
           {field.name}
         </span>
-        <span className="mt-1 block text-ui-xs text-text-secondary">
+        <span className="mt-0.5 block text-ui-xs text-text-secondary">
           {field.cropType} · {areaFormatter.format(field.areaHectares)} ha
         </span>
-        <span className="mt-2 flex flex-wrap gap-1.5">
+        <span className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
           <Badge tone={statusTone[field.workabilityStatus] ?? 'neutral'}>
             {field.workabilityStatus} workability
           </Badge>
           {field.hasActiveStressAlert && (
-            <Badge tone="warning" icon={faDroplet}>
-              Water stress
-            </Badge>
+            <span className="text-ui-xs font-medium text-status-warning">Water stress</span>
           )}
           {field.hasBiomassAnomaly && (
-            <Badge tone="danger" icon={faLeaf}>
-              Biomass anomaly
-            </Badge>
+            <span className="text-ui-xs font-medium text-status-danger">Biomass anomaly</span>
           )}
         </span>
       </button>
       {!selectable && <p className="mt-2 text-ui-xs text-status-warning">Boundary unavailable</p>}
       <Link
         to={`/fields/${encodeURIComponent(field.id)}`}
-        className="mt-2 inline-flex min-h-11 items-center rounded-control text-ui-xs font-semibold text-primary underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        className="mt-1 inline-flex min-h-11 items-center rounded-control text-ui-xs font-semibold text-primary underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:min-h-8"
       >
         View insights
       </Link>

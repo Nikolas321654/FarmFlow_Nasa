@@ -59,7 +59,7 @@ export function FieldMap({
   };
 
   return (
-    <div className="relative h-full min-h-[55dvh] w-full min-w-0 overflow-hidden rounded-card md:min-h-0">
+    <div className="relative h-full min-h-0 w-full min-w-0 overflow-hidden rounded-control">
       <MapContainer
         center={[48.5, 31.5]}
         zoom={6}

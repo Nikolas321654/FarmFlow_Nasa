@@ -37,7 +37,7 @@ export function FieldSidebar({
   const shownFields = authenticated && activeTab === 'mine' ? myFields : demoFields;
 
   return (
-    <div className="mt-3 min-w-0">
+    <div className="mt-2 min-w-0">
       {authLoading && (
         <p role="status" className="text-ui-xs text-text-secondary">
           Checking account…
@@ -120,7 +120,7 @@ export function FieldSidebar({
           </div>
         )}
         {!loading && !error && (
-          <ul className="space-y-2">
+          <ul className="space-y-1.5">
             {shownFields.map((field) => (
               <li key={field.id}>
                 <FieldCard

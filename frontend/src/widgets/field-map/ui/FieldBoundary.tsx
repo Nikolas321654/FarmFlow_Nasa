@@ -40,8 +40,8 @@ export function FieldBoundary({ field, positions, selected, onSelect }: FieldBou
       pathOptions={{
         color: selected ? '#101D17' : color,
         fillColor: color,
-        fillOpacity: selected ? 0.42 : 0.25,
-        weight: selected ? 5 : 3,
+        fillOpacity: selected ? 0.33 : 0.25,
+        weight: selected ? 4 : 3,
       }}
       eventHandlers={{ click: () => onSelect(field.id) }}
     >

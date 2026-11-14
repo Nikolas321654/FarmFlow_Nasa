@@ -59,7 +59,7 @@ If documents conflict, follow approved P0 scope and `frontend/docs/design.md`; r
 
 - GeoJSON WGS84 coordinates: `[longitude, latitude]`; Leaflet: `[latitude, longitude]`. Validate Polygon geometry/closed rings before submission. The backend is authoritative for area and centroid.
 - Use live Leaflet tiles and interactive GeoJSON polygons, **not static prototype screenshots** for the production map.
-- Apply exact colors from `frontend/docs/design.md` (forest `#162A1F`, primary `#24543A`, cream `#F6F1EA`). Helvetica for UI; Righteous 400 for large page headings and display accents.
+- Apply exact colors from `frontend/docs/design.md` (navy `#183152`, primary `#24543A`, cream `#F6F1EA`). Helvetica for UI; Righteous 400 for large page headings and display accents.
 - Use original SVG assets from `frontend/assets/logos/`; preserve transparency, colors and proportions. `frontend/assets/prototypes/` are visual references only.
 - Use FontAwesome. Provide responsive layouts, labeled units, accessible focus states, and loading/empty/error states. Do not show success if a server operation failed. Use concise English demo copy.
 
