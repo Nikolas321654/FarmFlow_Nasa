@@ -3,8 +3,10 @@ import {
   faArrowRight,
   faCircleCheck,
   faFlask,
+  faTrashCan,
 } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   useFieldDashboard,
@@ -12,6 +14,7 @@ import {
   withoutFieldPrefix,
   type FieldSummary,
 } from '@/entities/field';
+import { DeleteFieldDialog } from '@/features/delete-field';
 import { withoutLongDashes } from '@/shared/lib/text';
 import { Button, MetaList } from '@/shared/ui';
 import { buildFieldActions, sortActions } from '../model/actions';
@@ -29,12 +32,14 @@ import { WorkabilityForecast } from './WorkabilityForecast';
 type SelectedFieldPanelProps = {
   field: FieldSummary;
   onBack: () => void;
+  onDeleted: (field: FieldSummary) => void;
 };
 
 const areaFormatter = new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 });
 const trendDays = 14;
 
-export function SelectedFieldPanel({ field, onBack }: SelectedFieldPanelProps) {
+export function SelectedFieldPanel({ field, onBack, onDeleted }: SelectedFieldPanelProps) {
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const dashboardQuery = useFieldDashboard(field.id);
   const workabilityQuery = useFieldWorkability(field.id);
   const dashboard = dashboardQuery.data;
@@ -52,7 +57,7 @@ export function SelectedFieldPanel({ field, onBack }: SelectedFieldPanelProps) {
     <>
       <div className="relative shrink-0 border-b border-border/70 px-5 pb-5 pt-4">
         <ParcelMotif />
-        <div className="pr-10">
+        <div className="relative pr-10">
           <button
             type="button"
             onClick={onBack}
@@ -243,9 +248,27 @@ export function SelectedFieldPanel({ field, onBack }: SelectedFieldPanelProps) {
         >
           Detailed insights <FontAwesomeIcon icon={faArrowRight} aria-hidden="true" />
         </Link>
+        {!field.isDemo && (
+          <button
+            type="button"
+            onClick={() => setConfirmingDelete(true)}
+            aria-haspopup="dialog"
+            className="-mt-3 inline-flex min-h-11 w-full items-center justify-between gap-2 rounded-control border border-status-danger/40 bg-surface px-4 text-ui-sm font-semibold text-status-danger transition-colors duration-150 hover:border-status-danger hover:bg-status-danger-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-status-danger motion-reduce:transition-none"
+          >
+            Delete field
+            <FontAwesomeIcon icon={faTrashCan} aria-hidden="true" />
+          </button>
+        )}
       </div>
 
       <DataFreshnessFooter provenance={provenance} />
+      {confirmingDelete && (
+        <DeleteFieldDialog
+          field={field}
+          onClose={() => setConfirmingDelete(false)}
+          onDeleted={onDeleted}
+        />
+      )}
     </>
   );
 }

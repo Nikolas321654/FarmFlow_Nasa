@@ -13,6 +13,7 @@ type FieldContextPanelProps = {
   error: boolean;
   onSelectField: (id: string | null) => void;
   onCollapse: () => void;
+  onFieldDeleted: (field: FieldSummary) => void;
   focusOnMount?: boolean;
 };
 
@@ -25,6 +26,7 @@ export function FieldContextPanel({
   error,
   onSelectField,
   onCollapse,
+  onFieldDeleted,
   focusOnMount = false,
 }: FieldContextPanelProps) {
   return (
@@ -54,6 +56,7 @@ export function FieldContextPanel({
           key={selectedField.id}
           field={selectedField}
           onBack={() => onSelectField(null)}
+          onDeleted={onFieldDeleted}
         />
       ) : (
         <OverviewPanel

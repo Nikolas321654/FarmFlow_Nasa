@@ -143,6 +143,10 @@ export function FieldExplorerPage() {
               error={fieldQuery.isError}
               onSelectField={selectField}
               onCollapse={() => setPanelOpen(false)}
+              onFieldDeleted={(field) => {
+                setChosenTab(field.isDemo ? 'demo' : 'mine');
+                selectField(null);
+              }}
               focusOnMount={focusPanelOnOpen}
             />
           )}

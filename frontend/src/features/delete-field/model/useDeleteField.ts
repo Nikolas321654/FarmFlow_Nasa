@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { deleteField, fieldQueryKeys } from '@/entities/field';
+import { deleteField, fieldQueryKeys, type FieldSummary } from '@/entities/field';
 
 export function useDeleteField() {
   const queryClient = useQueryClient();
@@ -13,6 +13,9 @@ export function useDeleteField() {
         .findAll({ queryKey: fieldQueryKeys.detail(id) })
         .forEach((query) => query.reset());
       queryClient.removeQueries({ queryKey: fieldQueryKeys.detail(id) });
+      queryClient.setQueryData<FieldSummary[]>(fieldQueryKeys.list(), (fields) =>
+        fields?.filter((field) => field.id !== id),
+      );
       await queryClient.invalidateQueries({ queryKey: fieldQueryKeys.list() });
     },
   });
