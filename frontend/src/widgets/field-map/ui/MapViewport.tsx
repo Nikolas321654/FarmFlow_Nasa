@@ -1,6 +1,6 @@
 import { latLngBounds } from 'leaflet';
 import { useEffect, useRef } from 'react';
-import { useMap } from 'react-leaflet';
+import { useMapEvents } from 'react-leaflet';
 import type { MapPosition } from '@/shared/lib/geo';
 
 type MapViewportProps = {
@@ -8,6 +8,7 @@ type MapViewportProps = {
   selectedPositions: MapPosition[][] | null;
   selectedFieldId: string | null;
   overviewRequest: number;
+  onZoomChange: (zoom: number) => void;
 };
 
 export function MapViewport({
@@ -15,8 +16,9 @@ export function MapViewport({
   selectedPositions,
   selectedFieldId,
   overviewRequest,
+  onZoomChange,
 }: MapViewportProps) {
-  const map = useMap();
+  const map = useMapEvents({ zoomend: () => onZoomChange(map.getZoom()) });
   const fittedInitially = useRef(false);
   const previousSelection = useRef<string | null>(null);
   const previousOverviewRequest = useRef(overviewRequest);

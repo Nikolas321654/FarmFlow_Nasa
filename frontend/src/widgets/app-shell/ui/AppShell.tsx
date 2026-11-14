@@ -87,7 +87,7 @@ export function AppShell({
 
       <main
         aria-label="Application workspace"
-        className="relative min-h-[55dvh] min-w-0 flex-1 rounded-card border border-border bg-surface-muted md:min-h-0 md:overflow-hidden"
+        className="relative isolate min-h-[55dvh] min-w-0 flex-1 rounded-card border border-border bg-surface-muted md:min-h-0 md:overflow-hidden"
       >
         <Outlet />
       </main>
