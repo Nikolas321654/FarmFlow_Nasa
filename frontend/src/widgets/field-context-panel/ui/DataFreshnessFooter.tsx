@@ -21,17 +21,7 @@ export function DataFreshnessFooter({ provenance }: DataFreshnessFooterProps) {
       <div className="grid min-w-0 gap-0.5">
         {provenance ? (
           <>
-            <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
-              {sourceLabel(provenance) && <span>{sourceLabel(provenance)}</span>}
-              {provenance.simulated && (
-                <span
-                  className="rounded-badge border border-border px-2 py-0.5 text-ui-2xs font-medium"
-                  title="Deterministic sample values, not observations of a real field"
-                >
-                  {provenance.live ? 'Partly simulated' : 'Simulated'}
-                </span>
-              )}
-            </p>
+            {sourceLabel(provenance) && <p>{sourceLabel(provenance)}</p>}
             <MetaList>
               {provenance.latestObservation &&
                 `Latest NASA observation ${formatObservationDate(provenance.latestObservation)}`}
